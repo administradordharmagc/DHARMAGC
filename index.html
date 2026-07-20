@@ -934,6 +934,264 @@
       margin-top: 0.5rem;
     }
 
+    /* KPI / Pendientes / Prioridad / Calendario */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-bottom: 1.15rem;
+    }
+    @media (min-width: 720px) {
+      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .kpi {
+      background:
+        linear-gradient(160deg, rgba(198,163,90,0.12), transparent 55%),
+        var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1rem 0.95rem;
+      min-height: 96px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.35rem;
+    }
+    .kpi.silver-tone {
+      background:
+        linear-gradient(160deg, rgba(174,180,188,0.12), transparent 55%),
+        var(--bg-card);
+    }
+    .kpi.alert {
+      border-color: rgba(201,122,106,0.45);
+      background:
+        linear-gradient(160deg, rgba(201,122,106,0.14), transparent 55%),
+        var(--bg-card);
+    }
+    .kpi .kpi-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .kpi .kpi-value {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 5vw, 2.35rem);
+      font-weight: 600;
+      line-height: 1;
+      color: var(--gold-bright);
+    }
+    .kpi.silver-tone .kpi-value { color: var(--silver); }
+    .kpi.alert .kpi-value { color: var(--danger); }
+    .kpi .kpi-hint {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+    }
+
+    .pending-groups { display: flex; flex-direction: column; gap: 0.85rem; }
+    .pending-group {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .pending-group h3 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      margin-bottom: 0.65rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .pending-group h3 small {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .prio-list, .pending-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .prio-item, .pending-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.65rem;
+      align-items: start;
+      padding: 0.8rem 0.85rem;
+      border-radius: 12px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+    }
+    .prio-item.overdue { border-color: rgba(201,122,106,0.5); }
+    .prio-item.today { border-color: rgba(198,163,90,0.55); }
+    .prio-date {
+      min-width: 3.4rem;
+      text-align: center;
+      padding: 0.35rem 0.3rem;
+      border-radius: 10px;
+      background: var(--gold-dim);
+      color: var(--gold-bright);
+      font-weight: 700;
+      font-size: 0.78rem;
+      line-height: 1.2;
+    }
+    .prio-date span { display: block; font-size: 0.65rem; font-weight: 500; color: var(--muted); }
+    .prio-item.overdue .prio-date { background: rgba(201,122,106,0.18); color: var(--danger); }
+    .prio-body strong { display: block; font-size: 0.92rem; font-weight: 600; }
+    .prio-body .sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    .prio-body .note-snip {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      font-style: italic;
+      margin-top: 0.3rem;
+    }
+
+    .cal-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .cal-modes {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--bg-elev);
+    }
+    .cal-modes button {
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+    .cal-modes button.active {
+      background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+      color: #14110c;
+    }
+    .cal-title {
+      flex: 1;
+      text-align: center;
+      font-weight: 600;
+      color: var(--gold-bright);
+      font-size: 0.95rem;
+      min-width: 140px;
+    }
+    .cal-shell {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.85rem;
+      overflow-x: auto;
+    }
+    .cal-month {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.35rem;
+      min-width: 560px;
+    }
+    .cal-dow {
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.35rem 0;
+    }
+    .cal-day {
+      min-height: 88px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.35rem;
+      background: var(--bg-soft);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .cal-day:hover { border-color: var(--gold); }
+    .cal-day.out { opacity: 0.35; }
+    .cal-day.today {
+      border-color: var(--gold);
+      box-shadow: inset 0 0 0 1px rgba(198,163,90,0.35);
+    }
+    .cal-day-num {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-soft);
+      margin-bottom: 0.25rem;
+    }
+    .cal-chip {
+      display: block;
+      font-size: 0.62rem;
+      line-height: 1.25;
+      padding: 0.15rem 0.3rem;
+      border-radius: 4px;
+      background: var(--gold-dim);
+      color: var(--gold-bright);
+      margin-bottom: 0.18rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cal-chip.done { opacity: 0.45; text-decoration: line-through; }
+    .cal-more { font-size: 0.62rem; color: var(--muted); font-weight: 600; }
+
+    .cal-week {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(110px, 1fr));
+      gap: 0.45rem;
+      min-width: 780px;
+    }
+    .cal-week-col {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-soft);
+      min-height: 220px;
+      padding: 0.55rem;
+    }
+    .cal-week-col.today { border-color: var(--gold); }
+    .cal-week-head {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .cal-week-task {
+      font-size: 0.75rem;
+      padding: 0.4rem 0.45rem;
+      border-radius: 8px;
+      background: var(--bg);
+      border-left: 2px solid var(--gold);
+      margin-bottom: 0.35rem;
+      color: var(--text-soft);
+    }
+    .cal-week-task.done { opacity: 0.5; text-decoration: line-through; }
+    .cal-week-task .proj { display: block; font-size: 0.65rem; color: var(--muted); margin-top: 0.15rem; }
+
+    .cal-day-view { display: flex; flex-direction: column; gap: 0.55rem; }
+    .cal-day-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.45rem;
+      padding: 0.85rem;
+      border-radius: 12px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+    }
+    .cal-day-row strong { font-size: 0.95rem; }
+    .cal-day-row .meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
     .toast {
       position: fixed;
       bottom: calc(5rem + var(--safe-b));
@@ -1015,7 +1273,10 @@
 
     <div class="wrap">
       <nav class="tabs" id="tabs">
-        <button type="button" data-tab="emprendimientos" class="active">Emprendimientos</button>
+        <button type="button" data-tab="pendientes" class="active">Pendientes</button>
+        <button type="button" data-tab="prioridad">Prioridad</button>
+        <button type="button" data-tab="calendario">Calendario</button>
+        <button type="button" data-tab="emprendimientos">Emprendimientos</button>
         <button type="button" data-tab="tfg">TFG</button>
         <button type="button" data-tab="casa">Casa</button>
         <button type="button" data-tab="cursos">Cursos</button>
@@ -1024,7 +1285,49 @@
         <button type="button" data-tab="actividad">Actividad</button>
       </nav>
 
-      <section class="panel active" id="panel-emprendimientos">
+      <section class="panel active" id="panel-pendientes">
+        <div class="panel-head">
+          <div>
+            <h2>Pendientes</h2>
+            <p>Vista general de todo lo que falta por hacer.</p>
+          </div>
+        </div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="pending-groups" id="pendingGroups"></div>
+      </section>
+
+      <section class="panel" id="panel-prioridad">
+        <div class="panel-head">
+          <div>
+            <h2>Prioridad por fecha</h2>
+            <p>Tareas con fecha, de la más urgente a la más lejana.</p>
+          </div>
+        </div>
+        <ul class="prio-list" id="prioList"></ul>
+      </section>
+
+      <section class="panel" id="panel-calendario">
+        <div class="panel-head">
+          <div>
+            <h2>Calendario</h2>
+            <p>Todas las tareas con fecha · vista diaria, semanal o mensual.</p>
+          </div>
+        </div>
+        <div class="cal-toolbar">
+          <button type="button" class="btn btn-ghost" id="calPrev">‹</button>
+          <div class="cal-title" id="calTitle">—</div>
+          <button type="button" class="btn btn-ghost" id="calNext">›</button>
+          <button type="button" class="btn btn-ghost" id="calToday">Hoy</button>
+          <div class="cal-modes" id="calModes">
+            <button type="button" data-mode="day">Día</button>
+            <button type="button" data-mode="week">Semana</button>
+            <button type="button" data-mode="month" class="active">Mes</button>
+          </div>
+        </div>
+        <div class="cal-shell" id="calShell"></div>
+      </section>
+
+      <section class="panel" id="panel-emprendimientos">
         <div class="panel-head">
           <div>
             <h2>Emprendimientos</h2>
@@ -1363,6 +1666,16 @@
     let weekMonday = startOfWeek(new Date());
     let saveTimer = null;
     let pollTimer = null;
+    let calCursor = new Date();
+    calCursor.setHours(12, 0, 0, 0);
+    let calMode = "month"; // day | week | month
+    const AREA_LABELS = {
+      emprendimientos: "Emprendimientos",
+      tfg: "TFG",
+      casa: "Casa",
+      cursos: "Cursos",
+      marcas: "Marcas"
+    };
 
     function uid(prefix) {
       return prefix + "-" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -1626,6 +1939,9 @@
       if (!btn) return;
       document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b === btn));
       document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-" + btn.dataset.tab));
+      if (btn.dataset.tab === "pendientes") renderPendientes();
+      if (btn.dataset.tab === "prioridad") renderPrioridad();
+      if (btn.dataset.tab === "calendario") renderCalendario();
     });
 
     /* ——— Render ——— */
@@ -1646,11 +1962,281 @@
       return Math.round(tasks.filter((t) => t.done).length / tasks.length * 100);
     }
 
+    function allTasks() {
+      const out = [];
+      if (!state?.projects) return out;
+      state.projects.forEach((p) => p.steps.forEach((s) => s.tasks.forEach((t) => out.push({ p, s, t }))));
+      return out;
+    }
+
     function renderAll() {
       ["emprendimientos","tfg","casa","cursos","marcas"].forEach(renderArea);
+      renderPendientes();
+      renderPrioridad();
+      renderCalendario();
       renderWeek();
       renderActivity();
     }
+
+    function renderPendientes() {
+      const items = allTasks();
+      const pending = items.filter(({ t }) => !t.done);
+      const withDate = pending.filter(({ t }) => t.date);
+      const noDate = pending.filter(({ t }) => !t.date);
+      const today = todayISO();
+      const overdue = withDate.filter(({ t }) => t.date < today);
+      const dueToday = withDate.filter(({ t }) => t.date === today);
+      const done = items.filter(({ t }) => t.done).length;
+      const total = items.length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+
+      const kpi = document.getElementById("kpiGrid");
+      if (!kpi) return;
+      kpi.innerHTML = `
+        <div class="kpi">
+          <div class="kpi-label">Pendientes</div>
+          <div class="kpi-value">${pending.length}</div>
+          <div class="kpi-hint">de ${total} tareas totales</div>
+        </div>
+        <div class="kpi alert">
+          <div class="kpi-label">Vencidas</div>
+          <div class="kpi-value">${overdue.length}</div>
+          <div class="kpi-hint">pasaron su fecha</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Hoy</div>
+          <div class="kpi-value">${dueToday.length}</div>
+          <div class="kpi-hint">con fecha de hoy</div>
+        </div>
+        <div class="kpi silver-tone">
+          <div class="kpi-label">Avance</div>
+          <div class="kpi-value">${pct}%</div>
+          <div class="kpi-hint">${done} completadas</div>
+        </div>
+      `;
+
+      const byArea = {};
+      pending.forEach((item) => {
+        const a = item.p.area || "otros";
+        if (!byArea[a]) byArea[a] = [];
+        byArea[a].push(item);
+      });
+
+      const root = document.getElementById("pendingGroups");
+      const areas = Object.keys(byArea);
+      if (!areas.length) {
+        root.innerHTML = `<p class="empty">No hay nada pendiente. ¡Bien!</p>`;
+        return;
+      }
+
+      root.innerHTML = areas.map((area) => {
+        const list = byArea[area]
+          .slice()
+          .sort((a, b) => (a.t.date || "9999").localeCompare(b.t.date || "9999"))
+          .map(({ p, t }) => `
+            <li class="pending-item">
+              <input class="check" type="checkbox" data-toggle="${t.id}" />
+              <div class="prio-body">
+                <strong>${escapeHtml(t.label)}</strong>
+                <div class="sub">${escapeHtml(p.title)}${t.date ? " · " + fmtDay(t.date) : " · sin fecha"}</div>
+                ${t.note ? `<div class="note-snip">${escapeHtml(t.note)}</div>` : ""}
+              </div>
+              <span class="badge">${t.date ? fmtDay(t.date) : "—"}</span>
+            </li>
+          `).join("");
+        return `
+          <div class="pending-group">
+            <h3>${AREA_LABELS[area] || area} <small>${byArea[area].length}</small></h3>
+            <ul class="pending-list">${list}</ul>
+          </div>
+        `;
+      }).join("");
+
+      root.querySelectorAll("[data-toggle]").forEach((chk) => {
+        chk.addEventListener("change", () => {
+          const meta = findTask(chk.dataset.toggle);
+          if (!meta) return;
+          meta.task.done = true;
+          meta.task.doneAt = todayISO();
+          meta.task.doneBy = currentUser.id;
+          logActivity("completar", `«${meta.task.label}» desde Pendientes`);
+          scheduleSave(true);
+          renderAll();
+        });
+      });
+    }
+
+    function renderPrioridad() {
+      const today = todayISO();
+      const dated = allTasks()
+        .filter(({ t }) => !t.done && t.date)
+        .sort((a, b) => a.t.date.localeCompare(b.t.date));
+
+      const el = document.getElementById("prioList");
+      if (!el) return;
+      if (!dated.length) {
+        el.innerHTML = `<li class="empty" style="border:none;background:transparent;display:block">No hay tareas con fecha. Pon fechas en las tareas para ver la prioridad aquí.</li>`;
+        return;
+      }
+
+      el.innerHTML = dated.map(({ p, t }) => {
+        const overdue = t.date < today;
+        const isToday = t.date === today;
+        const d = t.date.split("-");
+        return `
+          <li class="prio-item ${overdue ? "overdue" : ""} ${isToday ? "today" : ""}">
+            <div class="prio-date">${d[2]}<span>${d[1]}/${d[0].slice(2)}</span></div>
+            <div class="prio-body">
+              <strong>${escapeHtml(t.label)}</strong>
+              <div class="sub">${escapeHtml(p.title)} · ${AREA_LABELS[p.area] || p.area}${overdue ? " · vencida" : isToday ? " · hoy" : ""}</div>
+              ${t.note ? `<div class="note-snip">${escapeHtml(t.note)}</div>` : ""}
+            </div>
+            <input class="check" type="checkbox" data-toggle="${t.id}" title="Completar" />
+          </li>
+        `;
+      }).join("");
+
+      el.querySelectorAll("[data-toggle]").forEach((chk) => {
+        chk.addEventListener("change", () => {
+          const meta = findTask(chk.dataset.toggle);
+          if (!meta) return;
+          meta.task.done = true;
+          meta.task.doneAt = todayISO();
+          meta.task.doneBy = currentUser.id;
+          logActivity("completar", `«${meta.task.label}» desde Prioridad`);
+          scheduleSave(true);
+          renderAll();
+        });
+      });
+    }
+
+    function tasksOnDate(iso) {
+      return allTasks().filter(({ t }) => t.date === iso);
+    }
+
+    function monthLabel(date) {
+      return date.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    }
+
+    function renderCalendario() {
+      const shell = document.getElementById("calShell");
+      const title = document.getElementById("calTitle");
+      if (!shell || !title) return;
+
+      if (calMode === "month") {
+        title.textContent = monthLabel(calCursor);
+        shell.innerHTML = renderMonthView(calCursor);
+      } else if (calMode === "week") {
+        const mon = startOfWeek(calCursor);
+        title.textContent = `${fmtDay(toISO(mon))} – ${fmtDay(toISO(addDays(mon, 6)))}`;
+        shell.innerHTML = renderWeekView(mon);
+      } else {
+        title.textContent = calCursor.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+        shell.innerHTML = renderDayView(toISO(calCursor));
+      }
+
+      shell.querySelectorAll("[data-jump]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const [y, m, d] = el.dataset.jump.split("-").map(Number);
+          calCursor = new Date(y, m - 1, d, 12);
+          calMode = "day";
+          document.querySelectorAll("#calModes button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "day"));
+          renderCalendario();
+        });
+      });
+    }
+
+    function renderMonthView(cursor) {
+      const y = cursor.getFullYear();
+      const m = cursor.getMonth();
+      const first = new Date(y, m, 1, 12);
+      const start = startOfWeek(first);
+      const dows = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+      let html = `<div class="cal-month">${dows.map((d) => `<div class="cal-dow">${d}</div>`).join("")}`;
+      for (let i = 0; i < 42; i++) {
+        const day = addDays(start, i);
+        const iso = toISO(day);
+        const inMonth = day.getMonth() === m;
+        const isToday = iso === todayISO();
+        const tasks = tasksOnDate(iso);
+        const chips = tasks.slice(0, 3).map(({ t }) =>
+          `<span class="cal-chip ${t.done ? "done" : ""}">${escapeHtml(t.label)}</span>`
+        ).join("");
+        const more = tasks.length > 3 ? `<div class="cal-more">+${tasks.length - 3}</div>` : "";
+        html += `
+          <div class="cal-day ${inMonth ? "" : "out"} ${isToday ? "today" : ""}" data-jump="${iso}">
+            <div class="cal-day-num">${day.getDate()}</div>
+            ${chips}${more}
+          </div>
+        `;
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    function renderWeekView(monday) {
+      const names = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+      let html = `<div class="cal-week">`;
+      for (let i = 0; i < 7; i++) {
+        const day = addDays(monday, i);
+        const iso = toISO(day);
+        const tasks = tasksOnDate(iso);
+        const isToday = iso === todayISO();
+        html += `
+          <div class="cal-week-col ${isToday ? "today" : ""}" data-jump="${iso}">
+            <div class="cal-week-head">${names[i]} ${fmtDay(iso)}</div>
+            ${tasks.length ? tasks.map(({ p, t }) => `
+              <div class="cal-week-task ${t.done ? "done" : ""}">
+                ${escapeHtml(t.label)}
+                <span class="proj">${escapeHtml(p.title)}</span>
+              </div>
+            `).join("") : `<div class="empty" style="font-size:0.75rem">Sin tareas</div>`}
+          </div>
+        `;
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    function renderDayView(iso) {
+      const tasks = tasksOnDate(iso);
+      if (!tasks.length) {
+        return `<div class="cal-day-view"><p class="empty">No hay tareas con fecha este día.</p></div>`;
+      }
+      return `<div class="cal-day-view">${tasks.map(({ p, t }) => `
+        <div class="cal-day-row">
+          <div>
+            <strong>${t.done ? "✓ " : ""}${escapeHtml(t.label)}</strong>
+            <div class="meta">${escapeHtml(p.title)} · ${AREA_LABELS[p.area] || p.area}${t.note ? " · tiene nota" : ""}</div>
+          </div>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    document.getElementById("calPrev").addEventListener("click", () => {
+      if (calMode === "month") calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1, 12);
+      else if (calMode === "week") calCursor = addDays(calCursor, -7);
+      else calCursor = addDays(calCursor, -1);
+      renderCalendario();
+    });
+    document.getElementById("calNext").addEventListener("click", () => {
+      if (calMode === "month") calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1, 12);
+      else if (calMode === "week") calCursor = addDays(calCursor, 7);
+      else calCursor = addDays(calCursor, 1);
+      renderCalendario();
+    });
+    document.getElementById("calToday").addEventListener("click", () => {
+      calCursor = new Date();
+      calCursor.setHours(12, 0, 0, 0);
+      renderCalendario();
+    });
+    document.getElementById("calModes").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-mode]");
+      if (!btn) return;
+      calMode = btn.dataset.mode;
+      document.querySelectorAll("#calModes button").forEach((b) => b.classList.toggle("active", b === btn));
+      renderCalendario();
+    });
 
     function renderArea(area) {
       const root = document.querySelector(`[data-area="${area}"]`);
@@ -1848,12 +2434,6 @@
       const a = toISO(monday);
       const b = toISO(addDays(monday, 6));
       return iso >= a && iso <= b;
-    }
-
-    function allTasks() {
-      const out = [];
-      state.projects.forEach((p) => p.steps.forEach((s) => s.tasks.forEach((t) => out.push({ p, s, t }))));
-      return out;
     }
 
     function renderWeek() {
