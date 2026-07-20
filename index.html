@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>DHARMA GC · Tablero</title>
+  <title>DHARMA SOLUTIONS · Tablero</title>
   <script>
     (function () {
       var t = localStorage.getItem("ce-tablero-theme");
@@ -402,17 +402,21 @@
     }
     .brand h1 {
       font-family: var(--font-display);
-      font-size: 0.95rem;
+      font-size: 0.82rem;
       font-weight: 700;
       line-height: 1.1;
-      letter-spacing: -0.01em;
-      text-transform: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: var(--text);
       background: none;
       -webkit-text-fill-color: unset;
+      max-width: min(42vw, 200px);
+    }
+    @media (min-width: 720px) {
+      .brand h1 { font-size: 0.9rem; max-width: none; letter-spacing: 0.06em; }
     }
     .brand small {
       display: block;
@@ -1669,10 +1673,10 @@
   <div id="gate">
     <button type="button" class="theme-fab" id="themeToggleGate" title="Cambiar tema">☾ Oscuro</button>
     <div class="gate-inner">
-      <img class="gate-logo" src="assets/dharma-gc-logo.png" alt="DHARMA GC" width="420" height="180" />
-      <div class="gate-kicker">Sistema operativo · C&amp;E</div>
+      <img class="gate-logo" src="assets/dharma-gc-logo.png" alt="DHARMA SOLUTIONS" width="420" height="180" />
+      <div class="gate-kicker">DHARMA SOLUTIONS</div>
       <h1>Tablero <em>de proyectos</em></h1>
-      <p class="gate-sub">Elige quién eres. Entráis al mismo panel; todo queda registrado para el otro.</p>
+      <p class="gate-sub">Elige quién eres. Entráis al mismo panel de la empresa; todo queda registrado para el equipo.</p>
       <div class="user-picks">
         <button type="button" class="user-card carmen" data-user="carmen">
           <div class="avatar">CM</div>
@@ -1699,9 +1703,9 @@
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand">
-          <img class="brand-logo" src="assets/dharma-gc-logo.png" alt="DHARMA GC" />
+          <img class="brand-logo" src="assets/dharma-gc-logo.png" alt="DHARMA SOLUTIONS" />
           <div>
-            <h1>Tablero</h1>
+            <h1>DHARMA SOLUTIONS</h1>
             <small id="syncLabel">Local</small>
           </div>
         </div>
@@ -1902,7 +1906,7 @@
     const CHAMPIONS = {
       edgar: { id: "edgar", label: "Edgar" },
       carmen: { id: "carmen", label: "Carmen" },
-      both: { id: "both", label: "C&E" },
+      both: { id: "both", label: "DHARMA SOLUTIONS" },
       third: { id: "third", label: "Tercero" }
     };
 
@@ -2404,7 +2408,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "Tablero Carmen Edgar",
+          name: "DHARMA SOLUTIONS",
           description: "Espacio fijo compartido sin codigos",
           contactEmail: "tablero@local.dev"
         })
@@ -2415,7 +2419,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: "Tablero Carmen Edgar",
+            name: "DHARMA SOLUTIONS",
             description: "Espacio fijo compartido",
             contactEmail: "tablero@local.dev"
           })

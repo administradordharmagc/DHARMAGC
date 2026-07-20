@@ -1,6 +1,6 @@
-﻿# Proximos_pasos
+﻿# DHARMA SOLUTIONS · Proximos_pasos
 
-Tablero compartido de proyectos (Carmen & Edgar).
+Tablero compartido de proyectos de **DHARMA SOLUTIONS**.
 
 ## Abrir
 
