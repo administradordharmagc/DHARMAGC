@@ -211,7 +211,7 @@
 
     .gate-inner {
       position: relative;
-      width: min(520px, 100%);
+      width: min(560px, 100%);
       text-align: center;
       animation: rise 0.85s cubic-bezier(0.22,1,0.36,1) both;
     }
@@ -295,25 +295,38 @@
       line-height: 1.55;
     }
 
-    .user-picks { display: grid; gap: 0.75rem; }
+    .user-picks {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+      width: 100%;
+    }
+    @media (min-width: 520px) {
+      .user-picks {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+    }
 
     .user-card {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 0.95rem;
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      text-align: left;
-      padding: 1.05rem 1.1rem;
-      border-radius: var(--radius);
+      text-align: center;
+      gap: 0.85rem;
+      padding: 1.25rem 1rem 1.15rem;
+      border-radius: 16px;
       border: 1px solid var(--line);
       background: var(--surface-shine), var(--bg-card);
       backdrop-filter: blur(18px) saturate(1.15);
       transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), border-color 0.2s, box-shadow 0.25s;
-      min-height: 78px;
+      min-height: 210px;
+      aspect-ratio: 1 / 1.05;
       box-shadow: var(--shadow-card);
+      justify-content: center;
     }
     .user-card:hover, .user-card:focus-visible {
-      transform: translateY(-3px);
+      transform: translateY(-4px);
       border-color: var(--line-strong);
       box-shadow: var(--shadow-card), var(--glow);
       outline: none;
@@ -321,15 +334,15 @@
     .user-card.carmen .avatar,
     .user-card.edgar .avatar {
       background: transparent;
-      border-color: rgba(255, 200, 160, 0.35);
+      border-color: rgba(210, 220, 230, 0.4);
       padding: 0;
       overflow: hidden;
     }
     .avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 999px;
-      border: 2px solid rgba(255, 200, 160, 0.35);
+      width: 88px;
+      height: 88px;
+      border-radius: 18px;
+      border: 1.5px solid rgba(210, 220, 230, 0.4);
       display: grid;
       place-items: center;
       font-weight: 700;
@@ -365,25 +378,36 @@
       object-fit: cover;
       display: block;
     }
+    .user-card .user-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      min-width: 0;
+      width: 100%;
+    }
     .user-card strong {
       display: block;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 600;
-      letter-spacing: 0.01em;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      max-width: 100%;
     }
-    .user-card span {
+    .user-card span:not(.arrow) {
       display: block;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       color: var(--muted);
-      margin-top: 0.2rem;
+      margin-top: 0;
       font-weight: 400;
     }
     .user-card .arrow {
       color: var(--muted);
-      font-size: 1.1rem;
+      font-size: 1rem;
+      margin-top: 0.15rem;
       transition: color 0.2s, transform 0.2s;
     }
-    .user-card:hover .arrow { color: var(--gold-bright); transform: translateX(3px); }
+    .user-card:hover .arrow { color: var(--gold-bright); transform: translateY(-2px); }
 
     .btn {
       display: inline-flex;
@@ -1753,7 +1777,7 @@
       .person-filter button { min-height: 40px; padding: 0.5rem 0.85rem; }
       .search-soft { min-height: 44px; font-size: 0.9rem; }
       .icon-btn { width: 40px; height: 40px; }
-      .user-card { min-height: 84px; }
+      .user-card { min-height: 200px; }
       .kpi { min-height: 92px; padding: 0.85rem; }
       .prio-item, .pending-item { padding: 0.9rem 0.85rem; }
       .cal-toolbar .btn-ghost { min-width: 40px; min-height: 40px; }
@@ -2029,16 +2053,16 @@
       <p class="gate-sub">Elige quién eres. Entráis al mismo panel de la empresa; todo queda registrado para el equipo.</p>
       <div class="user-picks">
         <button type="button" class="user-card carmen" data-user="carmen">
-          <div class="avatar"><img src="assets/carmen.jpg" alt="Carmen" width="56" height="56" /></div>
-          <div>
+          <div class="avatar"><img src="assets/carmen.jpg" alt="Carmen" width="88" height="88" /></div>
+          <div class="user-meta">
             <strong>Carmen Merino Bueno</strong>
             <span>Entrar como Carmen</span>
           </div>
           <span class="arrow">→</span>
         </button>
         <button type="button" class="user-card edgar" data-user="edgar">
-          <div class="avatar"><img src="assets/edgar.jpg" alt="Edgar" width="56" height="56" /></div>
-          <div>
+          <div class="avatar"><img src="assets/edgar.jpg" alt="Edgar" width="88" height="88" /></div>
+          <div class="user-meta">
             <strong>Edgar Gabriel Pablo Ramos</strong>
             <span>Entrar como Edgar</span>
           </div>
