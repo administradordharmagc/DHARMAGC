@@ -2136,6 +2136,40 @@
       background-image: var(--surface-shine);
       transition: border-color 0.2s ease, transform 0.2s ease;
     }
+    .settings-sync-help {
+      margin: 0;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+    .settings-token-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .settings-token-input {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 12px;
+      border: 1px solid var(--line-strong);
+      background: var(--input-bg);
+      color: var(--text);
+      padding: 0.7rem 0.85rem;
+      font-size: 0.85rem;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .settings-sync-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .settings-sync-actions .btn,
+    .settings-sync-actions a.btn {
+      text-decoration: none;
+      justify-content: center;
+    }
     .settings-tile:hover {
       border-color: var(--line-strong);
       transform: translateY(-1px);
@@ -5093,10 +5127,19 @@
                   <div class="settings-ico" aria-hidden="true">↻</div>
                   <div>
                     <h3>Sincronización</h3>
-                    <p id="settingsSyncLine">Carmen ↔ Edgar · nube compartida</p>
+                    <p id="settingsSyncLine">Carmen ↔ Edgar · nube en GitHub</p>
                   </div>
                 </div>
-                <button type="button" class="btn btn-ghost" id="settingsRefreshSync">Sincronizar ahora</button>
+                <p class="settings-sync-help" id="settingsCloudHelp">
+                  La nube real es vuestro repositorio de GitHub. Hace falta un token (una sola vez en cada dispositivo).
+                </p>
+                <label class="settings-token-label" for="settingsCloudToken">Token de GitHub</label>
+                <input type="password" id="settingsCloudToken" class="settings-token-input" placeholder="Pega el token aquí (ghp_… o github_pat_…)" autocomplete="off" spellcheck="false" />
+                <div class="settings-sync-actions">
+                  <button type="button" class="btn btn-gold" id="settingsSaveToken">Guardar token</button>
+                  <button type="button" class="btn btn-ghost" id="settingsRefreshSync">Sincronizar ahora</button>
+                  <a class="btn btn-ghost" id="settingsTokenGuide" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Crear token</a>
+                </div>
               </article>
             </div>
 
@@ -5598,10 +5641,15 @@
     const SESSION_KEY = "ce-tablero-session";
     const SPACE_KEY = "ce-tablero-space-id";
     const THEME_KEY = "ce-tablero-theme";
-    /* Nube compartida Carmen ↔ Edgar (JSONBlob, gratis). Misma ID en todos los dispositivos. */
-    const CLOUD_API = "https://jsonblob.com/api/jsonBlob";
-    const SHARED_CLOUD_ID = "019f8561-9946-7ef0-81c5-c5e898580735";
+    const CLOUD_TOKEN_KEY = "ce-tablero-gh-token";
+    /* Nube real: archivo en vuestro GitHub (no JSONBlob). */
+    const GH_OWNER = "carmenmerinobueno";
+    const GH_REPO = "Proximos_pasos";
+    const GH_PATH = "cloud/state.json";
+    const GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+    const SHARED_CLOUD_ID = "github-cloud";
     const FIXED_ROOM = "tablero-carmen-edgar-compartido";
+    let cloudFileSha = null;
 
     function getTheme() {
       const t = document.documentElement.getAttribute("data-theme");
@@ -6487,6 +6535,7 @@
       if (syncing) shown = "Sincronizando…";
       else if (/pausa|saturad/i.test(raw)) shown = raw.replace(/^Nube\s*/i, "Nube ").slice(0, 42);
       else if (ok) shown = "Sincronizado entre dispositivos";
+      else if (/token|Ajustes/i.test(raw)) shown = "Configura token en Ajustes";
       else if (/Sin nube|Local|solo este|Solo este/i.test(raw)) shown = "Sin nube · pulsa para sincronizar";
       else if (raw) shown = raw;
       if (label) label.textContent = shown;
@@ -6523,8 +6572,41 @@
       localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
     }
 
+    function getCloudToken() {
+      try { return (localStorage.getItem(CLOUD_TOKEN_KEY) || "").trim(); }
+      catch (_) { return ""; }
+    }
+
+    function setCloudToken(token) {
+      const v = (token || "").trim();
+      if (v) localStorage.setItem(CLOUD_TOKEN_KEY, v);
+      else localStorage.removeItem(CLOUD_TOKEN_KEY);
+    }
+
+    function isCloudReady() {
+      return !!getCloudToken();
+    }
+
+    function toBase64Utf8(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    function fromBase64Utf8(b64) {
+      return decodeURIComponent(escape(atob(String(b64 || "").replace(/\n/g, ""))));
+    }
+
+    function ghHeaders(needAuth) {
+      const headers = {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      };
+      const tok = getCloudToken();
+      if (needAuth && tok) headers.Authorization = "Bearer " + tok;
+      else if (tok) headers.Authorization = "Bearer " + tok;
+      return headers;
+    }
+
     async function pantryCreate() {
-      /* Legacy no-op: el espacio compartido ya está fijado en SHARED_CLOUD_ID */
       return SHARED_CLOUD_ID;
     }
 
@@ -6533,7 +6615,7 @@
     }
 
     function isCloudId(id) {
-      return !!(id && /^[0-9a-f-]{20,}$/i.test(id) && !id.startsWith("local-") && id !== FIXED_ROOM);
+      return id === SHARED_CLOUD_ID || id === "github-cloud" || (!!id && !String(id).startsWith("local-"));
     }
 
     async function ensureCloudSpace() {
@@ -6550,36 +6632,67 @@
       return cloudPut(id, data);
     }
 
-    async function cloudGet(id) {
-      if (!isCloudId(id)) return null;
-      /* No enviar Accept: JSONBlob no lo autoriza en CORS y tumba el sync del navegador. */
-      const res = await fetchTimeout(`${CLOUD_API}/${id}`, {
+    async function cloudGet(_id) {
+      const res = await fetchTimeout(GH_API + "?ref=main&_=" + Date.now(), {
         method: "GET",
+        headers: ghHeaders(false),
         cache: "no-store"
-      }, 12000);
-      if (res.status === 404 || res.status === 400) return null;
-      if (res.status === 429) {
-        cloudCooldownUntil = Date.now() + 120000;
-        throw new Error("demasiadas peticiones · espera 2 min");
+      }, 15000);
+      if (res.status === 404) {
+        cloudFileSha = null;
+        return null;
+      }
+      if (res.status === 401) throw new Error("Token inválido");
+      if (res.status === 403) {
+        cloudCooldownUntil = Date.now() + 60000;
+        throw new Error("Sin permiso o límite GitHub · revisa el token");
       }
       if (!res.ok) throw new Error("Leer nube HTTP " + res.status);
-      return await res.json();
+      const meta = await res.json();
+      cloudFileSha = meta.sha || null;
+      if (!meta.content) return null;
+      try {
+        return JSON.parse(fromBase64Utf8(meta.content));
+      } catch (_) {
+        throw new Error("Nube corrupta");
+      }
     }
 
-    async function cloudPut(id, data) {
-      if (!isCloudId(id)) return;
+    async function cloudPut(_id, data) {
+      if (!getCloudToken()) throw new Error("Falta token de nube en Ajustes");
       const payload = cloudPayload(data);
-      const body = JSON.stringify(payload);
-      const res = await fetchTimeout(`${CLOUD_API}/${id}`, {
+      const content = toBase64Utf8(JSON.stringify(payload));
+      if (!cloudFileSha) {
+        try { await cloudGet(); } catch (_) {}
+      }
+      const body = {
+        message: "sync tablero Carmen ↔ Edgar",
+        content,
+        branch: "main"
+      };
+      if (cloudFileSha) body.sha = cloudFileSha;
+
+      let res = await fetchTimeout(GH_API, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body
-      }, 25000);
-      if (res.status === 429) {
-        cloudCooldownUntil = Date.now() + 120000;
-        throw new Error("demasiadas peticiones · espera 2 min");
+        headers: { ...ghHeaders(true), "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }, 30000);
+
+      if (res.status === 409 || res.status === 422) {
+        await cloudGet();
+        body.sha = cloudFileSha;
+        res = await fetchTimeout(GH_API, {
+          method: "PUT",
+          headers: { ...ghHeaders(true), "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        }, 30000);
+      }
+      if (res.status === 401 || res.status === 403) {
+        throw new Error("Token inválido o sin permiso de escritura");
       }
       if (!res.ok) throw new Error("Guardar nube HTTP " + res.status);
+      const out = await res.json();
+      cloudFileSha = out.content?.sha || cloudFileSha;
     }
 
     function cloudPayload(data) {
@@ -6774,10 +6887,10 @@
     async function syncNow(opts = {}) {
       const { showToast = false, push = true, force = false } = opts;
       if (!state) return false;
-      if (!isCloudId(spaceId)) {
+      if (!isCloudReady()) {
         lastCloudOk = false;
-        setSyncStatus("Solo este dispositivo");
-        if (showToast) toast("Sin nube configurada");
+        setSyncStatus("Configura token en Ajustes");
+        if (showToast) toast("Ve a Ajustes, pega el token de GitHub y guarda");
         return false;
       }
       if (!force && cloudIsCoolingDown()) {
@@ -6821,7 +6934,7 @@
           remote = await cloudGet(spaceId);
         } catch (readErr) {
           console.warn("cloudGet", readErr);
-          if (/demasiadas peticiones/i.test(readErr?.message || "")) throw readErr;
+          if (/demasiadas|límite|permiso|Token/i.test(readErr?.message || "")) throw readErr;
         }
         if (remote && remote.version && Array.isArray(remote.projects)) {
           try {
@@ -6843,9 +6956,12 @@
       } catch (e) {
         lastCloudOk = false;
         lastCloudError = (e && e.name === "AbortError") ? "tiempo agotado" : ((e && e.message) || "error de red");
-        if (/demasiadas peticiones/i.test(lastCloudError)) {
-          setSyncStatus("Nube saturada · espera 2 min");
-          if (showToast) toast("Demasiados intentos. Espera 2 minutos y pulsa sincronizar.");
+        if (/demasiadas|límite|saturad/i.test(lastCloudError)) {
+          setSyncStatus("Nube saturada · espera un momento");
+          if (showToast) toast(lastCloudError);
+        } else if (/token|Token|permiso|Ajustes/i.test(lastCloudError)) {
+          setSyncStatus("Configura token en Ajustes");
+          if (showToast) toast(lastCloudError);
         } else {
           setSyncStatus("Sin nube · solo este dispositivo");
           if (showToast) toast("No llegó a la nube (" + lastCloudError + ")");
@@ -6944,7 +7060,7 @@
         const surname = (currentUser.name || "").replace(currentUser.short, "").trim();
         role.textContent = surname || "Cuenta activa";
       }
-      setSyncStatus(lastCloudOk ? "Sincronizado · nube" : (isCloudId(spaceId) ? "Sincronizando…" : "Solo este dispositivo"));
+      setSyncStatus(lastCloudOk ? "Sincronizado · nube" : (isCloudReady() ? "Sincronizando…" : "Configura token en Ajustes"));
     }
 
     document.getElementById("btnLogout").addEventListener("click", () => {
@@ -6955,7 +7071,7 @@
 
     function startPolling() {
       stopPolling();
-      if (!isCloudId(spaceId)) return;
+      if (!isCloudReady()) return;
       /* Poco frecuente: JSONBlob limita peticiones (HTTP 429). */
       const interval = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 180000 : 120000;
       pollTimer = setInterval(async () => {
@@ -9489,9 +9605,24 @@
 
       const sync = document.getElementById("settingsSyncLine");
       if (sync) {
-        sync.textContent = lastCloudOk
-          ? "Nube OK · ideas/eventos se comparten entre dispositivos"
-          : "Nube no conectada · los cambios quedan solo aquí hasta que sync funcione";
+        if (!isCloudReady()) {
+          sync.textContent = "Falta token · sin él no hay nube entre dispositivos";
+        } else if (lastCloudOk) {
+          sync.textContent = "Nube GitHub OK · se comparte entre móvil y PC";
+        } else {
+          sync.textContent = "Token guardado · pulsa Sincronizar ahora";
+        }
+      }
+      const help = document.getElementById("settingsCloudHelp");
+      if (help) {
+        help.textContent = isCloudReady()
+          ? "Token guardado en este dispositivo. Usa el mismo token en el móvil y en el PC."
+          : "Crea un token (Fine-grained) con permiso Contents Read/Write en Proximos_pasos, pégalo y guarda.";
+      }
+      const tokenInput = document.getElementById("settingsCloudToken");
+      if (tokenInput && !tokenInput.dataset.filled) {
+        tokenInput.value = getCloudToken() ? "••••••••••••••••" : "";
+        tokenInput.dataset.filled = getCloudToken() ? "1" : "";
       }
 
       const box = document.getElementById("settingsProjectChecks");
@@ -9617,7 +9748,7 @@
       const ok = await syncNow({ showToast: true, push: true });
       renderAll();
       paintSettings();
-      if (!ok) setSyncStatus("Sin nube · solo este dispositivo");
+      if (!ok && !isCloudReady()) setSyncStatus("Configura token en Ajustes");
     }
 
     document.getElementById("btnTopSync")?.addEventListener("click", () => {
@@ -9626,6 +9757,32 @@
 
     document.getElementById("settingsRefreshSync")?.addEventListener("click", () => {
       runManualSync();
+    });
+
+    document.getElementById("settingsSaveToken")?.addEventListener("click", async () => {
+      const input = document.getElementById("settingsCloudToken");
+      const raw = (input?.value || "").trim();
+      if (!raw || raw.startsWith("••")) {
+        if (!getCloudToken()) return toast("Pega un token nuevo");
+        toast("Token ya guardado");
+        return;
+      }
+      setCloudToken(raw);
+      if (input) {
+        input.value = "••••••••••••••••";
+        input.dataset.filled = "1";
+      }
+      startPolling();
+      toast("Token guardado");
+      paintSettings();
+      await runManualSync();
+    });
+
+    document.getElementById("settingsCloudToken")?.addEventListener("focus", (e) => {
+      if (e.target.dataset.filled === "1") {
+        e.target.value = "";
+        e.target.dataset.filled = "";
+      }
     });
     document.getElementById("settingsExportDiario")?.addEventListener("click", () => {
       exportJournalXlsx();
