@@ -1,22 +1,14 @@
-/* Service worker mínimo: app instalable + carga offline básica del shell */
-const CACHE = "dharma-tablero-v1";
-const SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./assets/dharma-gc-logo.png"
-];
+/* SW ligero: no bloquea la app. Red primero; cache solo como respaldo. */
+const CACHE = "dharma-tablero-v2";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
@@ -25,16 +17,10 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  /* No cachear la nube ni CDNs dinámicos */
-  if (url.hostname.includes("jsonblob.com") || url.hostname.includes("cdn.sheetjs.com")) return;
-
+  if (url.hostname.includes("jsonblob.com") || url.hostname.includes("cdn.sheetjs.com") || url.hostname.includes("fonts.")) {
+    return;
+  }
   event.respondWith(
-    fetch(req)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
-        return res;
-      })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
+    fetch(req).catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
   );
 });

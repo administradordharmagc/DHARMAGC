@@ -2777,8 +2777,7 @@
     }
     .fab-label { white-space: nowrap; }
     @media (max-width: 860px) {
-      .fab-bar { padding-left: calc(4.35rem + 0.85rem); justify-content: center; }
-      .fab { min-height: 2.85rem; padding: 0.75rem 1.15rem; border-radius: 16px; }
+      .fab-bar { /* móvil: estilos en bloque side-nav */ }
     }
 
     .modal-backdrop {
@@ -3357,26 +3356,165 @@
     }
     @media (max-width: 860px) {
       .side-nav {
-        width: 4.35rem;
-        padding: 0.7rem 0.4rem calc(1rem + var(--safe-b));
-        align-items: center;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        flex-direction: row;
+        align-items: stretch;
+        border-right: none;
+        border-top: 1px solid var(--line);
+        padding: 0.35rem 0.2rem calc(0.4rem + var(--safe-b));
+        z-index: 42;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        background: color-mix(in srgb, var(--bg-card) 94%, transparent);
       }
       .side-nav-label { display: none; }
+      .side-nav-list {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.1rem;
+      }
       .side-link {
         grid-template-columns: 1fr;
         justify-items: center;
-        padding: 0.55rem 0.3rem;
-        gap: 0.25rem;
+        padding: 0.4rem 0.15rem 0.35rem;
+        gap: 0.2rem;
+        flex: 1 1 0;
+        min-width: 0;
+        border-radius: 10px;
+      }
+      .side-link.active {
+        box-shadow: inset 0 -3px 0 var(--hub-accent);
+      }
+      .side-link-icon {
+        width: 26px;
+        height: 26px;
+      }
+      .side-link-icon svg {
+        width: 14px;
+        height: 14px;
       }
       .side-link-text {
-        font-size: 0.58rem;
+        font-size: 0.55rem;
         letter-spacing: 0;
         text-align: center;
-        line-height: 1.1;
+        line-height: 1.05;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .side-link-count { display: none; }
-      .app-body > .wrap { margin-left: 4.35rem; }
-      .home-quote .welcome-quote { font-size: clamp(1.55rem, 6.5vw, 2.1rem); }
+      .app-body {
+        min-height: calc(100dvh - 4.6rem - var(--safe-t) - 4.6rem);
+      }
+      .app-body > .wrap {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-bottom: calc(5.8rem + var(--safe-b));
+        box-sizing: border-box;
+      }
+      body[data-app-view="module"] .app-body > .wrap,
+      body[data-app-view="module"][data-module="settings"] .app-body > .wrap,
+      body[data-app-view="module"][data-module="goals"] .app-body > .wrap,
+      body[data-app-view="module"][data-module="ideas"] .app-body > .wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .fab-bar {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+        padding-bottom: calc(4.85rem + var(--safe-b));
+        justify-content: center;
+      }
+      .fab-label { display: none; }
+      .fab {
+        min-width: 3.1rem;
+        min-height: 3.1rem;
+        padding: 0.75rem;
+        border-radius: 999px;
+      }
+      .topbar-inner { gap: 0.45rem; }
+      .account-chip .account-role { display: none; }
+      .nav-btn-label { display: none; }
+      .brand-meta { display: none; }
+      .toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+      }
+      .person-filter {
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+      .search-wrap { width: 100%; }
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+      .kpi {
+        min-height: 84px;
+        padding: 0.75rem 0.7rem;
+      }
+      .kpi .kpi-value {
+        font-size: 1.45rem;
+      }
+      .module-chrome {
+        margin-bottom: 0.75rem;
+      }
+      .module-chrome h2 {
+        font-size: 1.1rem;
+        min-width: 0;
+      }
+      #moduleActions {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+      #moduleActions .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+      .cal-toolbar, .cal-filters {
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+      .cal-title {
+        width: 100%;
+        text-align: center;
+        order: -1;
+      }
+      .settings-top {
+        grid-template-columns: 1fr;
+      }
+      .goal-composer-row {
+        grid-template-columns: 1fr;
+      }
+      .ideas-board {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem 0.75rem;
+        padding-top: 0.75rem;
+      }
+      .idea-card {
+        min-height: 190px;
+      }
+      .home-quote .welcome-quote { font-size: clamp(1.45rem, 6.2vw, 2rem); }
+      .modal-backdrop {
+        padding: 0.5rem;
+        padding-bottom: calc(0.5rem + var(--safe-b));
+      }
     }
 
     .module-chrome {
@@ -6289,10 +6427,10 @@
 
     async function cloudGet(id) {
       if (!isCloudId(id)) return null;
-      const res = await fetch(`${CLOUD_API}/${id}`, {
+      const res = await fetchTimeout(`${CLOUD_API}/${id}`, {
         headers: { Accept: "application/json" },
         cache: "no-store"
-      });
+      }, 8000);
       if (res.status === 404 || res.status === 400) return null;
       if (!res.ok) throw new Error("Error al leer la nube");
       return await res.json();
@@ -6300,12 +6438,18 @@
 
     async function cloudPut(id, data) {
       if (!isCloudId(id)) return;
-      const res = await fetch(`${CLOUD_API}/${id}`, {
+      const res = await fetchTimeout(`${CLOUD_API}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(data)
-      });
+      }, 10000);
       if (!res.ok) throw new Error("Error al guardar en la nube");
+    }
+
+    function fetchTimeout(url, opts, ms) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(timer));
     }
 
     async function pullCloud() {
@@ -6321,7 +6465,7 @@
         } else if (state) {
           await cloudPut(spaceId, state);
         }
-        setSyncStatus("Sincronizado");
+        setSyncStatus("Sincronizado · nube");
         return true;
       } catch (e) {
         setSyncStatus("Local (sin red)");
@@ -6384,20 +6528,29 @@
       currentUser = user;
       sessionStorage.setItem(SESSION_KEY, currentUser.id);
       state = normalizeState(loadLocal() || DEFAULT_SEED());
-      setSyncStatus("Entrando…");
-      paintLegends();
-      await ensureCloudSpace();
-      await pullCloud();
-      state = normalizeState(state || DEFAULT_SEED());
+      ensureCloudSpace();
+      /* Mostrar ya la app (no esperar a la nube: en móvil se quedaba colgada). */
       document.getElementById("gate").style.display = "none";
       document.getElementById("app").classList.add("ready");
       paintWho();
+      paintLegends();
       updatePersonFilterUI();
       renderAll();
       showView("hub");
-      logActivity("entrada", "Ha entrado al tablero");
-      scheduleSave(false);
+      setSyncStatus("Sincronizando…");
       startPolling();
+      pullCloud().then((ok) => {
+        if (ok) {
+          state = normalizeState(state || DEFAULT_SEED());
+          renderAll();
+        }
+        setSyncStatus(ok ? "Sincronizado · nube" : "Local (sin red)");
+        logActivity("entrada", "Ha entrado al tablero");
+        scheduleSave(false);
+      }).catch(() => {
+        setSyncStatus("Local (sin red)");
+        logActivity("entrada", "Ha entrado al tablero");
+      });
     }
 
     function paintWho() {
@@ -9031,7 +9184,7 @@
     /* ——— Boot ——— */
     (async function boot() {
       if ("serviceWorker" in navigator) {
-        try { await navigator.serviceWorker.register("./sw.js"); } catch (e) { console.warn(e); }
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
       }
       const sid = sessionStorage.getItem(SESSION_KEY);
       if (sid && USERS[sid]) {
