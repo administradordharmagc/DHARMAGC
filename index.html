@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="es" data-app-build="v-pm-20260722-004804">
+<html lang="es" data-app-build="v-inv-20260722-005336">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -1252,12 +1252,63 @@
     }
     .costs-composer {
       border: 1px solid var(--line); border-radius: var(--radius);
-      background: var(--bg-card); padding: 0.9rem 1rem;
-      display: grid; gap: 0.55rem;
+      background: var(--bg-card); padding: 1rem 1.1rem;
+      display: grid; gap: 0.75rem;
     }
-    .costs-composer .cost-row { grid-template-columns: 1.4fr 0.7fr 0.9fr 1fr auto auto; }
-    @media (max-width: 820px) {
-      .costs-composer .cost-row { grid-template-columns: 1fr 1fr; }
+    .costs-composer-head {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; align-items: baseline;
+    }
+    .costs-composer-head h4 {
+      margin: 0; font-family: var(--font-display); font-size: 0.72rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+    }
+    .costs-composer-head .hint {
+      margin: 0; font-size: 0.72rem; color: var(--muted); max-width: 42rem; line-height: 1.35;
+    }
+    .costs-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.55rem 0.65rem;
+    }
+    @media (max-width: 980px) {
+      .costs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .costs-grid { grid-template-columns: 1fr; }
+    }
+    .costs-grid label, .costs-note-field label {
+      display: grid; gap: 0.28rem; font-size: 0.66rem;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+      font-family: var(--font-display); font-weight: 700;
+    }
+    .costs-grid input, .costs-grid select, .costs-note-field input, .costs-note-field textarea {
+      width: 100%; background: var(--input-bg); border: 1px solid var(--line);
+      border-radius: 8px; padding: 0.48rem 0.55rem; color: var(--text);
+      color-scheme: var(--scheme); font-size: 0.84rem; font-family: var(--font-body);
+      text-transform: none; letter-spacing: normal; font-weight: 400;
+    }
+    .costs-grid .span-2 { grid-column: span 2; }
+    @media (max-width: 560px) { .costs-grid .span-2 { grid-column: span 1; } }
+    .costs-money {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.55rem; padding: 0.7rem 0.75rem;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+    }
+    @media (max-width: 720px) { .costs-money { grid-template-columns: 1fr 1fr; } }
+    .costs-money .tot {
+      font-weight: 700; font-variant-numeric: tabular-nums;
+      color: var(--gold-bright, var(--gold));
+    }
+    .costs-actions {
+      display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center; justify-content: space-between;
+    }
+    .costs-table { font-size: 0.8rem; }
+    .costs-table th, .costs-table td { padding: 0.5rem 0.35rem; }
+    .costs-table .sub { font-size: 0.66rem; color: var(--muted); margin-top: 0.15rem; }
+    .vat-chip {
+      display: inline-block; padding: 0.1rem 0.35rem; border-radius: 999px;
+      border: 1px solid var(--line); font-size: 0.65rem; color: var(--muted);
     }
     .cost-receipt-pick {
       display: inline-flex; align-items: center; gap: 0.35rem;
@@ -5561,15 +5612,7 @@
         p.owner = projectOwner(p);
         p.badge = projectBadge(p);
         if (!Array.isArray(p.costs)) p.costs = [];
-        p.costs = p.costs.map((c) => ({
-          id: c.id || uid("cost"),
-          label: c.label || "",
-          amount: Number(c.amount) || 0,
-          date: c.date || "",
-          note: c.note || "",
-          receipt: typeof c.receipt === "string" ? c.receipt : "",
-          createdAt: c.createdAt || todayISO()
-        }));
+        p.costs = p.costs.map((c) => normalizeCostEntry(c));
         if (!Array.isArray(p.notes)) {
           p.notes = [];
           const legacy = typeof p.note === "string" ? p.note.trim() : "";
@@ -7447,9 +7490,13 @@
           box.querySelector("#btnNewProject").onclick = () => openAddProject(defaultAreaId());
         }
       } else if (moduleId === "costes") {
-        box.innerHTML = `<button type="button" class="btn btn-gold" id="btnFocusCostAdd">+ Coste</button>`;
+        box.innerHTML = `
+          <button type="button" class="btn btn-ghost" id="btnExportCostes">Exportar Excel + fotos</button>
+          <button type="button" class="btn btn-gold" id="btnFocusCostAdd">+ Factura</button>
+        `;
+        box.querySelector("#btnExportCostes").onclick = () => exportCostesExcelWithImages();
         box.querySelector("#btnFocusCostAdd").onclick = () => {
-          document.getElementById("costAddLabel")?.focus();
+          document.getElementById("costAddInvoice")?.focus() || document.getElementById("costAddLabel")?.focus();
         };
       } else if (moduleId === "pendientes") {
         box.innerHTML = `<button type="button" class="btn btn-gold" id="btnQuickTask">+ Tarea</button>`;
@@ -7818,20 +7865,37 @@
     }
 
     function projectCostRows(p) {
-      const costRows = [["Concepto", "Importe", "Fecha", "Nota", "Captura", "Creado"]];
+      const costRows = [[
+        "Fecha", "Nº factura", "Proveedor", "NIF proveedor", "Concepto", "Categoría",
+        "Base", "IVA %", "Cuota IVA", "Total", "Pago", "Deducible", "Nota", "Captura", "Creado"
+      ]];
       let total = 0;
-      (p.costs || []).forEach((c) => {
-        total += Number(c.amount) || 0;
+      let baseSum = 0;
+      let vatSum = 0;
+      (p.costs || []).forEach((raw) => {
+        const c = normalizeCostEntry(raw);
+        total += c.amount;
+        baseSum += c.base;
+        vatSum += c.vatAmount;
         costRows.push([
-          c.label || "",
-          Number(c.amount) || 0,
           c.date || "",
+          c.invoiceNumber || "",
+          c.supplierName || "",
+          c.supplierNif || "",
+          c.label || "",
+          costCategoryLabel(c.category),
+          c.base,
+          c.vatRate,
+          c.vatAmount,
+          c.amount,
+          costPaymentLabel(c.paymentMethod),
+          c.deductible ? "Sí" : "No",
           c.note || "",
           c.receipt ? "Sí" : "No",
           c.createdAt || ""
         ]);
       });
-      costRows.push(["TOTAL", total, "", "", "", ""]);
+      costRows.push(["TOTAL", "", "", "", "", "", baseSum, "", vatSum, total, "", "", "", "", ""]);
       return costRows;
     }
 
@@ -9110,6 +9174,82 @@
       return btn;
     }
 
+
+    const COST_VAT_RATES = [0, 4, 10, 21];
+    const COST_CATEGORIES = [
+      { id: "software", label: "Software / SaaS" },
+      { id: "hardware", label: "Hardware / material" },
+      { id: "servicios", label: "Servicios profesionales" },
+      { id: "marketing", label: "Marketing / publicidad" },
+      { id: "viajes", label: "Viajes / transporte" },
+      { id: "hosteleria", label: "Hostelería / dietas" },
+      { id: "oficina", label: "Oficina / suministros" },
+      { id: "formacion", label: "Formación" },
+      { id: "otros", label: "Otros" }
+    ];
+    const COST_PAYMENTS = [
+      { id: "transferencia", label: "Transferencia" },
+      { id: "tarjeta", label: "Tarjeta" },
+      { id: "bizum", label: "Bizum" },
+      { id: "efectivo", label: "Efectivo" },
+      { id: "domiciliacion", label: "Domiciliación" },
+      { id: "otro", label: "Otro" }
+    ];
+
+    function roundMoney(n) {
+      return Math.round((Number(n) || 0) * 100) / 100;
+    }
+
+    function normalizeCostEntry(c) {
+      const vatRate = COST_VAT_RATES.includes(Number(c?.vatRate)) ? Number(c.vatRate) : 21;
+      let base = Number(c?.base);
+      let vatAmount = Number(c?.vatAmount);
+      let total = Number(c?.amount);
+      if (!Number.isFinite(total)) total = 0;
+      if (!Number.isFinite(base) || base < 0) {
+        base = vatRate === 0 ? total : roundMoney(total / (1 + vatRate / 100));
+      }
+      if (!Number.isFinite(vatAmount) || vatAmount < 0) {
+        vatAmount = roundMoney(base * (vatRate / 100));
+      }
+      if (!total && (base || vatAmount)) total = roundMoney(base + vatAmount);
+      if (total && !base && !vatAmount) {
+        base = vatRate === 0 ? total : roundMoney(total / (1 + vatRate / 100));
+        vatAmount = roundMoney(total - base);
+      }
+      const category = COST_CATEGORIES.some((x) => x.id === c?.category) ? c.category : "otros";
+      const paymentMethod = COST_PAYMENTS.some((x) => x.id === c?.paymentMethod) ? c.paymentMethod : "transferencia";
+      return {
+        id: c?.id || uid("cost"),
+        label: c?.label || "",
+        amount: roundMoney(total),
+        base: roundMoney(base),
+        vatRate,
+        vatAmount: roundMoney(vatAmount),
+        date: c?.date || "",
+        invoiceNumber: c?.invoiceNumber || "",
+        supplierName: c?.supplierName || "",
+        supplierNif: (c?.supplierNif || "").toUpperCase(),
+        category,
+        paymentMethod,
+        deductible: c?.deductible !== false,
+        note: c?.note || "",
+        receipt: typeof c?.receipt === "string" ? c.receipt : "",
+        createdAt: c?.createdAt || todayISO()
+      };
+    }
+
+    function costCategoryLabel(id) {
+      return COST_CATEGORIES.find((x) => x.id === id)?.label || id || "Otros";
+    }
+    function costPaymentLabel(id) {
+      return COST_PAYMENTS.find((x) => x.id === id)?.label || id || "—";
+    }
+    function fmtMoney(n) {
+      return roundMoney(n).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+
     function projectNotes(p) {
       if (!p) return [];
       if (!Array.isArray(p.notes)) p.notes = [];
@@ -9211,12 +9351,18 @@
         .filter((proj) => matchesProjectOwnerFilter(proj, personFilter))
         .slice()
         .sort((a, b) => String(a.title).localeCompare(String(b.title), "es"));
-      const rows = filteredCostEntries();
+      const rows = filteredCostEntries().map(({ p: proj, c }) => ({ p: proj, c: normalizeCostEntry(c) }));
       const total = rows.reduce((s, x) => s + (Number(x.c.amount) || 0), 0);
+      const baseSum = rows.reduce((s, x) => s + (Number(x.c.base) || 0), 0);
+      const vatSum = rows.reduce((s, x) => s + (Number(x.c.vatAmount) || 0), 0);
+      const deductibleVat = rows.filter((x) => x.c.deductible).reduce((s, x) => s + (Number(x.c.vatAmount) || 0), 0);
       const projectOptions = [`<option value="">Todos los proyectos</option>`]
         .concat(projects.map((proj) =>
           `<option value="${escapeHtml(proj.id)}" ${costFilterProject === proj.id ? "selected" : ""}>${escapeHtml(proj.title)}</option>`
         )).join("");
+      const catOpts = COST_CATEGORIES.map((x) => `<option value="${x.id}">${escapeHtml(x.label)}</option>`).join("");
+      const payOpts = COST_PAYMENTS.map((x) => `<option value="${x.id}">${escapeHtml(x.label)}</option>`).join("");
+      const vatOpts = COST_VAT_RATES.map((r) => `<option value="${r}" ${r === 21 ? "selected" : ""}>${r}%</option>`).join("");
 
       root.innerHTML = `
         <div class="costs-filters">
@@ -9231,46 +9377,116 @@
           </label>
           <button type="button" class="btn btn-ghost" id="costFilterClear">Limpiar filtros</button>
         </div>
+
         <div class="costs-composer">
-          <h4 style="margin:0;font-family:var(--font-display);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Añadir coste</h4>
-          <div class="cost-row">
-            <select id="costAddProject" aria-label="Proyecto del coste">
-              ${projects.map((proj) => `<option value="${escapeHtml(proj.id)}" ${costFilterProject === proj.id ? "selected" : ""}>${escapeHtml(proj.title)}</option>`).join("") || `<option value="">Sin proyectos</option>`}
-            </select>
-            <input type="text" id="costAddLabel" placeholder="Concepto" />
-            <input type="number" id="costAddAmount" placeholder="€" step="0.01" />
-            <input type="date" id="costAddDate" value="${todayISO()}" />
+          <div class="costs-composer-head">
+            <h4>Registrar factura / gasto</h4>
+            <p class="hint">Campos alineados con el libro de facturas recibidas: proveedor, NIF, nº de factura, base, IVA y justificante.</p>
+          </div>
+          <div class="costs-grid">
+            <label class="span-2">Proyecto / imputación
+              <select id="costAddProject">
+                ${projects.map((proj) => `<option value="${escapeHtml(proj.id)}" ${costFilterProject === proj.id ? "selected" : ""}>${escapeHtml(proj.title)}</option>`).join("") || `<option value="">Sin proyectos</option>`}
+              </select>
+            </label>
+            <label>Nº factura
+              <input type="text" id="costAddInvoice" placeholder="Serie-número" autocomplete="off" />
+            </label>
+            <label>Fecha factura
+              <input type="date" id="costAddDate" value="${todayISO()}" />
+            </label>
+            <label class="span-2">Proveedor (razón social)
+              <input type="text" id="costAddSupplier" placeholder="Nombre o empresa emisora" />
+            </label>
+            <label>NIF / CIF proveedor
+              <input type="text" id="costAddNif" placeholder="B12345678" maxlength="15" />
+            </label>
+            <label>Categoría
+              <select id="costAddCategory">${catOpts}</select>
+            </label>
+            <label class="span-2">Concepto / descripción
+              <input type="text" id="costAddLabel" placeholder="Qué se ha comprado o contratado" />
+            </label>
+            <label>Forma de pago
+              <select id="costAddPayment">${payOpts}</select>
+            </label>
+            <label>IVA deducible
+              <select id="costAddDeductible">
+                <option value="yes" selected>Sí</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+          </div>
+          <div class="costs-money">
+            <label>Base imponible (EUR)
+              <input type="number" id="costAddBase" placeholder="0,00" step="0.01" min="0" />
+            </label>
+            <label>Tipo IVA
+              <select id="costAddVat">${vatOpts}</select>
+            </label>
+            <label>Cuota IVA (EUR)
+              <input type="number" id="costAddVatAmt" placeholder="0,00" step="0.01" min="0" />
+            </label>
+            <label>Total factura (EUR)
+              <input type="number" id="costAddTotal" class="tot" placeholder="0,00" step="0.01" min="0" />
+            </label>
+          </div>
+          <div class="costs-note-field">
+            <label>Nota interna (opcional)
+              <input type="text" id="costAddNote" placeholder="Referencia, pedido, observación…" />
+            </label>
+          </div>
+          <div class="costs-actions">
             <label class="cost-receipt-pick" id="costReceiptPick">
               <input type="file" id="costAddReceipt" accept="image/*" capture="environment" hidden />
-              <span id="costReceiptLabel">Captura</span>
+              <span id="costReceiptLabel">Adjuntar captura / PDF foto</span>
             </label>
-            <button type="button" class="btn btn-gold" id="costAddBtn">Añadir</button>
+            <button type="button" class="btn btn-gold" id="costAddBtn">Guardar factura</button>
           </div>
-          <input type="text" id="costAddNote" placeholder="Nota opcional" />
         </div>
+
         <div class="costs-summary">
-          <span>${rows.length} coste(s)</span>
-          <span>${total.toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €</span>
+          <span>${rows.length} factura(s) · Base ${fmtMoney(baseSum)} € · IVA ${fmtMoney(vatSum)} € <span class="vat-chip">deducible ${fmtMoney(deductibleVat)} €</span></span>
+          <span>Total ${fmtMoney(total)} €</span>
         </div>
-        <div class="cost-box" style="padding:0.4rem 0.6rem">
+        <div class="cost-box" style="padding:0.4rem 0.6rem; overflow:auto">
           <table class="costs-table">
             <thead>
-              <tr><th>Fecha</th><th>Proyecto</th><th>Concepto</th><th>Importe</th><th>Captura</th><th></th></tr>
+              <tr>
+                <th>Fecha</th>
+                <th>Factura</th>
+                <th>Proveedor</th>
+                <th>Concepto</th>
+                <th>Base</th>
+                <th>IVA</th>
+                <th>Total</th>
+                <th>Captura</th>
+                <th></th>
+              </tr>
             </thead>
             <tbody>
               ${rows.length ? rows.map(({ p: proj, c }) => `
                 <tr>
                   <td>${c.date ? fmtDay(c.date) : "—"}</td>
-                  <td>${escapeHtml(proj.title)}</td>
+                  <td>
+                    <strong>${escapeHtml(c.invoiceNumber || "—")}</strong>
+                    <div class="sub">${escapeHtml(proj.title)}</div>
+                  </td>
+                  <td>
+                    <strong>${escapeHtml(c.supplierName || "—")}</strong>
+                    <div class="sub">${escapeHtml(c.supplierNif || "sin NIF")}</div>
+                  </td>
                   <td>
                     <strong>${escapeHtml(c.label || "Sin concepto")}</strong>
-                    ${c.note ? `<div style="font-size:0.68rem;color:var(--muted)">${escapeHtml(c.note)}</div>` : ""}
+                    <div class="sub">${escapeHtml(costCategoryLabel(c.category))} · ${escapeHtml(costPaymentLabel(c.paymentMethod))}${c.deductible ? "" : " · IVA no deducible"}</div>
                   </td>
-                  <td class="amt">${(Number(c.amount) || 0).toLocaleString("es-ES", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €</td>
-                  <td>${c.receipt ? `<img class="cost-receipt-thumb" src="${c.receipt}" alt="Recibo" data-view-receipt="1" />` : "—"}</td>
+                  <td class="amt">${fmtMoney(c.base)} €</td>
+                  <td class="amt">${fmtMoney(c.vatAmount)} € <span class="vat-chip">${c.vatRate}%</span></td>
+                  <td class="amt"><strong>${fmtMoney(c.amount)} €</strong></td>
+                  <td>${c.receipt ? `<img class="cost-receipt-thumb" src="${c.receipt}" alt="Justificante" data-view-receipt="1" />` : "—"}</td>
                   <td><button type="button" class="icon-btn" data-del-cost="${c.id}" data-del-proj="${proj.id}" title="Eliminar">×</button></td>
                 </tr>
-              `).join("") : `<tr><td colspan="6"><p class="empty" style="border:none;background:transparent;margin:0.4rem 0">No hay costes con estos filtros.</p></td></tr>`}
+              `).join("") : `<tr><td colspan="9"><p class="empty" style="border:none;background:transparent;margin:0.4rem 0">No hay facturas con estos filtros.</p></td></tr>`}
             </tbody>
           </table>
         </div>
@@ -9283,6 +9499,50 @@
         costFilterProject = ""; costFilterFrom = ""; costFilterTo = ""; renderCostes();
       };
 
+      const baseEl = root.querySelector("#costAddBase");
+      const vatEl = root.querySelector("#costAddVat");
+      const vatAmtEl = root.querySelector("#costAddVatAmt");
+      const totalEl = root.querySelector("#costAddTotal");
+      let syncLock = false;
+      const syncFromBase = () => {
+        if (syncLock) return;
+        syncLock = true;
+        const base = Number(baseEl.value);
+        const rate = Number(vatEl.value) || 0;
+        if (Number.isFinite(base)) {
+          const vat = roundMoney(base * (rate / 100));
+          vatAmtEl.value = String(vat);
+          totalEl.value = String(roundMoney(base + vat));
+        }
+        syncLock = false;
+      };
+      const syncFromTotal = () => {
+        if (syncLock) return;
+        syncLock = true;
+        const total = Number(totalEl.value);
+        const rate = Number(vatEl.value) || 0;
+        if (Number.isFinite(total)) {
+          const base = rate === 0 ? total : roundMoney(total / (1 + rate / 100));
+          baseEl.value = String(base);
+          vatAmtEl.value = String(roundMoney(total - base));
+        }
+        syncLock = false;
+      };
+      baseEl.addEventListener("input", syncFromBase);
+      vatEl.addEventListener("change", () => {
+        if (baseEl.value !== "") syncFromBase();
+        else if (totalEl.value !== "") syncFromTotal();
+      });
+      totalEl.addEventListener("input", syncFromTotal);
+      vatAmtEl.addEventListener("input", () => {
+        if (syncLock) return;
+        syncLock = true;
+        const base = Number(baseEl.value) || 0;
+        const vat = Number(vatAmtEl.value) || 0;
+        totalEl.value = String(roundMoney(base + vat));
+        syncLock = false;
+      });
+
       const fileInput = root.querySelector("#costAddReceipt");
       const pickLabel = root.querySelector("#costReceiptLabel");
       const pickWrap = root.querySelector("#costReceiptPick");
@@ -9291,19 +9551,19 @@
         const file = fileInput.files && fileInput.files[0];
         if (!file) {
           pendingCostReceipt = "";
-          pickLabel.textContent = "Captura";
+          pickLabel.textContent = "Adjuntar captura / PDF foto";
           pickWrap.classList.remove("has-file");
           return;
         }
         try {
           pendingCostReceipt = await compressImageFile(file);
-          pickLabel.textContent = "Captura lista";
+          pickLabel.textContent = "Justificante listo";
           pickWrap.classList.add("has-file");
           toast("Captura adjuntada");
         } catch (err) {
           pendingCostReceipt = "";
           fileInput.value = "";
-          pickLabel.textContent = "Captura";
+          pickLabel.textContent = "Adjuntar captura / PDF foto";
           pickWrap.classList.remove("has-file");
           toast(err.message || "No se pudo adjuntar");
         }
@@ -9314,20 +9574,48 @@
         const proj = (state.projects || []).find((x) => x.id === projectId);
         if (!proj) return toast("Elige un proyecto");
         const label = root.querySelector("#costAddLabel").value.trim();
-        const amount = Number(root.querySelector("#costAddAmount").value);
+        const supplierName = root.querySelector("#costAddSupplier").value.trim();
+        const supplierNif = root.querySelector("#costAddNif").value.trim().toUpperCase();
+        const invoiceNumber = root.querySelector("#costAddInvoice").value.trim();
         const date = root.querySelector("#costAddDate").value || "";
         const note = root.querySelector("#costAddNote").value.trim();
-        if (!label) return toast("Escribe el concepto del coste");
-        if (!Number.isFinite(amount)) return toast("Importe no válido");
+        const category = root.querySelector("#costAddCategory").value;
+        const paymentMethod = root.querySelector("#costAddPayment").value;
+        const deductible = root.querySelector("#costAddDeductible").value !== "no";
+        const vatRate = Number(root.querySelector("#costAddVat").value);
+        let base = Number(root.querySelector("#costAddBase").value);
+        let vatAmount = Number(root.querySelector("#costAddVatAmt").value);
+        let amount = Number(root.querySelector("#costAddTotal").value);
+        if (!label) return toast("Escribe el concepto / descripción");
+        if (!supplierName) return toast("Indica el proveedor (razón social)");
+        if (!Number.isFinite(amount) && Number.isFinite(base)) amount = roundMoney(base + (Number.isFinite(vatAmount) ? vatAmount : 0));
+        if (!Number.isFinite(amount) || amount < 0) return toast("Total de factura no válido");
+        if (!Number.isFinite(base)) base = vatRate === 0 ? amount : roundMoney(amount / (1 + vatRate / 100));
+        if (!Number.isFinite(vatAmount)) vatAmount = roundMoney(amount - base);
         if (!Array.isArray(proj.costs)) proj.costs = [];
-        proj.costs.push({
-          id: uid("cost"), label, amount, date, note,
-          receipt: pendingCostReceipt || "", createdAt: todayISO()
+        const entry = normalizeCostEntry({
+          id: uid("cost"),
+          label,
+          amount,
+          base,
+          vatRate,
+          vatAmount,
+          date,
+          invoiceNumber,
+          supplierName,
+          supplierNif,
+          category,
+          paymentMethod,
+          deductible,
+          note,
+          receipt: pendingCostReceipt || "",
+          createdAt: todayISO()
         });
-        logActivity("crear", `Coste «${label}» en ${proj.title}`);
+        proj.costs.push(entry);
+        logActivity("crear", `Factura «${label}» · ${supplierName} · ${fmtMoney(entry.amount)} €`);
         scheduleSave(true);
         pendingCostReceipt = "";
-        toast("Coste guardado");
+        toast("Factura guardada");
         renderCostes();
         paintHubCounts();
       };
@@ -9340,12 +9628,148 @@
           const proj = (state.projects || []).find((x) => x.id === btn.dataset.delProj);
           if (!proj) return;
           proj.costs = (proj.costs || []).filter((x) => x.id !== btn.dataset.delCost);
-          logActivity("editar", `Quitó un coste en «${proj.title}»`);
+          logActivity("editar", `Eliminó una factura en «${proj.title}»`);
           scheduleSave(true);
           renderCostes();
           paintHubCounts();
         });
       });
+    }
+
+    function dataUrlToBase64(dataUrl) {
+      if (!dataUrl) return "";
+      const i = dataUrl.indexOf("base64,");
+      return i >= 0 ? dataUrl.slice(i + 7) : dataUrl;
+    }
+
+    async function exportCostesExcelWithImages() {
+      if (typeof ExcelJS === "undefined") {
+        toast("No se pudo cargar ExcelJS. Revisa la conexión e inténtalo otra vez.");
+        return;
+      }
+      const rows = filteredCostEntries().map(({ p: proj, c }) => ({ p: proj, c: normalizeCostEntry(c) }));
+      if (!rows.length) return toast("No hay facturas para exportar con estos filtros");
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = "DHARMA SOLUTIONS";
+      wb.created = new Date();
+      const sheet = wb.addWorksheet("Facturas recibidas", {
+        views: [{ state: "frozen", ySplit: 1 }]
+      });
+      sheet.columns = [
+        { header: "Fecha", key: "date", width: 12 },
+        { header: "Nº factura", key: "invoice", width: 14 },
+        { header: "Proveedor", key: "supplier", width: 26 },
+        { header: "NIF proveedor", key: "nif", width: 14 },
+        { header: "Proyecto", key: "project", width: 20 },
+        { header: "Concepto", key: "label", width: 28 },
+        { header: "Categoría", key: "category", width: 18 },
+        { header: "Base", key: "base", width: 12 },
+        { header: "IVA %", key: "vatRate", width: 8 },
+        { header: "Cuota IVA", key: "vat", width: 12 },
+        { header: "Total", key: "total", width: 12 },
+        { header: "Pago", key: "pay", width: 14 },
+        { header: "Deducible", key: "ded", width: 11 },
+        { header: "Nota", key: "note", width: 22 },
+        { header: "Justificante", key: "img", width: 18 }
+      ];
+      sheet.getRow(1).font = { bold: true };
+      sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2A2430" } };
+      sheet.getRow(1).font = { bold: true, color: { argb: "FFF5F0E8" } };
+
+      let baseSum = 0, vatSum = 0, totalSum = 0;
+      rows.forEach(({ p: proj, c }, idx) => {
+        baseSum += c.base;
+        vatSum += c.vatAmount;
+        totalSum += c.amount;
+        const excelRow = idx + 2;
+        sheet.addRow({
+          date: c.date || "",
+          invoice: c.invoiceNumber || "",
+          supplier: c.supplierName || "",
+          nif: c.supplierNif || "",
+          project: proj.title || "",
+          label: c.label || "",
+          category: costCategoryLabel(c.category),
+          base: c.base,
+          vatRate: c.vatRate,
+          vat: c.vatAmount,
+          total: c.amount,
+          pay: costPaymentLabel(c.paymentMethod),
+          ded: c.deductible ? "Sí" : "No",
+          note: c.note || "",
+          img: c.receipt ? "Ver imagen" : "—"
+        });
+        sheet.getRow(excelRow).height = c.receipt ? 72 : 18;
+        if (c.receipt) {
+          try {
+            const imageId = wb.addImage({
+              base64: dataUrlToBase64(c.receipt),
+              extension: "jpeg"
+            });
+            sheet.addImage(imageId, {
+              tl: { col: 14, row: excelRow - 1 },
+              ext: { width: 96, height: 72 }
+            });
+          } catch (_) {}
+        }
+      });
+
+      const totalRow = sheet.addRow({
+        date: "TOTAL",
+        base: roundMoney(baseSum),
+        vat: roundMoney(vatSum),
+        total: roundMoney(totalSum)
+      });
+      totalRow.font = { bold: true };
+
+      const imgs = wb.addWorksheet("Justificantes");
+      imgs.columns = [
+        { header: "Nº", key: "n", width: 6 },
+        { header: "Factura", key: "invoice", width: 16 },
+        { header: "Proveedor", key: "supplier", width: 24 },
+        { header: "Total", key: "total", width: 12 },
+        { header: "Captura", key: "cap", width: 40 }
+      ];
+      imgs.getRow(1).font = { bold: true };
+      let imgRow = 2;
+      rows.forEach(({ c }, i) => {
+        if (!c.receipt) return;
+        imgs.addRow({
+          n: i + 1,
+          invoice: c.invoiceNumber || c.label || "",
+          supplier: c.supplierName || "",
+          total: c.amount,
+          cap: ""
+        });
+        imgs.getRow(imgRow).height = 160;
+        try {
+          const imageId = wb.addImage({
+            base64: dataUrlToBase64(c.receipt),
+            extension: "jpeg"
+          });
+          imgs.addImage(imageId, {
+            tl: { col: 4, row: imgRow - 1 },
+            ext: { width: 220, height: 150 }
+          });
+        } catch (_) {}
+        imgRow += 1;
+      });
+      if (imgRow === 2) {
+        imgs.addRow({ n: "—", invoice: "Sin capturas en este filtro", supplier: "", total: "", cap: "" });
+      }
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const a = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = `facturas-recibidas-${todayISO()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast("Excel con justificantes descargado");
     }
 
 
@@ -10380,5 +10804,6 @@
     })();
   </script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </body>
 </html>
