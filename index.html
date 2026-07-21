@@ -3839,6 +3839,7 @@
       if (!Array.isArray(s.activity)) s.activity = [];
       s.areas = normalizeAreas(s);
       applyNovaCutPlan(s);
+      applyCourtReplayPlan(s);
       const used = new Set();
       s.projects.forEach((p) => {
         if (typeof p.archived !== "boolean") p.archived = !!p.archived;
@@ -4139,51 +4140,234 @@
     }
 
 
+
+    function buildCourtReplayProject() {
+      return {
+        id: "emp-replay",
+        area: "emprendimientos",
+        owner: "both",
+        title: "CourtReplay",
+        badge: "En marcha",
+        planVersion: "courtreplay-july-2026-v1",
+        lede: "Cámaras en pistas de pádel: el jugador reserva y paga por móvil (QR), el sistema graba solo y el club cobra comisión sin invertir. Sprint 23–31 jul: aterrizar → montar piloto → vender.",
+        note: "Calendario: Jue 23 pasos 1–5 · Vie 24 pasos 6–9 · Sáb 25 pasos 10–15 · Dom 26 web+Rasp · Lun 27 red/cámaras · Mar 28 automatización · Mié 29 test+oferta · Jue 30 venta/contacto · Vie 31 follow-up/cierre. Si el club tarda en firmar, el cierre puede pasar a agosto; el sistema+oferta+pipeline sí deben estar listos en julio.",
+        archived: false,
+        steps: [
+          {
+            id: "step-cr-1",
+            title: "Fase 1 — Aterrizar la idea (23–25 jul)",
+            tasks: [
+              mkNovaTask("cr-01-inventario", "Inventario de lo existente", "2026-07-23", {
+                priority: 1,
+                champion: "both",
+                description: "Abrir lista y meter TODO sin filtro: web/demo (QR, partidos, pago, panel club); presentaciones (clubs + Edgar); bloc de notas/decisiones; presupuestos y lista de compra; cuentas (dominio, hosting, Stripe demo, email); hardware comprado o solo apuntado. Por qué: si no sabéis qué está hecho de verdad, vais a rehacer trabajo o vender humo. Resultado: documento ESTADO ACTUAL con 3 columnas Hecho / A medias / No existe."
+              }),
+              mkNovaTask("cr-02-separar", "Separar hecho / a medias / no existe", "2026-07-23", {
+                priority: 1,
+                champion: "both",
+                description: "De cada cosa «a medias», decidir: ¿entra en el piloto de julio? ¿se aparca? ¿se mata? Aparcar ejemplos: IA highlights, outdoor, multi-club, app nativa, edición avanzada. Por qué: el piloto se muere si intentáis CapCut + Padmi + PlaySight a la vez. Resultado: lista corta MVP SÍ y lista NO ahora."
+              }),
+              mkNovaTask("cr-03-mvp", "Cerrar MVP en 1 frase + 5 bullets", "2026-07-23", {
+                priority: 1,
+                champion: "both",
+                description: "Frase tipo: «CourtReplay instala cámaras en pistas de pádel, graba el partido automáticamente cuando el jugador reserva y paga desde el móvil, y reparte ingresos con el club sin que el club invierta.» Bullets: 1) cámara graba sola en la franja; 2) jugador entra por QR (sin app); 3) paga en web y recibe código por email; 4) ve/descarga su partido; 5) club ve comisión en panel simple. Por qué: si no cabe en 20 s, el dueño tampoco lo entiende."
+              }),
+              mkNovaTask("cr-04-piloto", "Definir piloto (1 club, 2 pistas, 30 días)", "2026-07-23", {
+                priority: 1,
+                champion: "both",
+                description: "Decidir por escrito: ciudad Madrid; tipo indoor; 1 club; 2 pistas; duración 30 días; modelo sin inversión inicial + revenue share; quién instala: vosotros; qué aporta el club: WiFi, acceso, permiso cartel/grabación. Por qué: «hacer cámaras de pádel» no es un plan; «2 pistas indoor en 1 club de Madrid en 30 días» sí lo es."
+              }),
+              mkNovaTask("cr-05-roles", "Reparto de roles Carmen/Edgar", "2026-07-23", {
+                champion: "both",
+                description: "Carmen: producto, web, pagos, emails, panel, calidad del flujo digital. Edgar: clubes, visitas, instalación física, prueba en pista, relación comercial. Compartido: presupuesto, decisiones de oferta, seguimiento de tareas. Por qué: si los dos hacen de todo, no avanzáis nada del todo."
+              }),
+              mkNovaTask("cr-06-extras", "Decidir extras mínimos del MVP", "2026-07-24", {
+                champion: "carmen",
+                description: "Añadir solo si ayuda a cerrar piloto: cartel QR claro; email automático con código; retención vídeo (ej. 7 días); aviso legal visible; página «cómo funciona» para el club; WhatsApp soporte piloto. NO añadir: efectos fancy, app store, IA, torneos, Playtomic compleja. Por qué: cada extra retrasa enseñar algo real."
+              }),
+              mkNovaTask("cr-07-riesgos", "Mapa de riesgos y planes B", "2026-07-24", {
+                champion: "both",
+                description: "Listar riesgos + plan B: WiFi malo → router 4G; miedo RGPD → cartel + texto simple; jugadores no pagan → precio piloto + demo recepción; cámara mal enfocada → prueba ángulo en seco; disco lleno → borrado auto tras subida; sin contacto club → outreach masivo 30–31. Por qué: los pilotos fallan por WiFi, permisos y fricción, no por «la idea»."
+              }),
+              mkNovaTask("cr-08-competencia", "Comparativa vs competencia", "2026-07-24", {
+                champion: "both",
+                description: "Tabla: Padmi, Aiball, GameCam/similares y «no hacer nada» (competencia real al inicio). Comparar: ¿club paga por adelantado? ¿permanencia? ¿jugador necesita app? ¿soporte local Madrid? ¿personalización rápida? Sacar 1 ventaja defendible: «piloto sin riesgo + software propio + trato cercano en Madrid». Por qué: en la reunión dirán «eso ya existe»."
+              }),
+              mkNovaTask("cr-09-objeciones", "Argumentario de objeciones", "2026-07-24", {
+                champion: "edgar",
+                description: "Respuestas cortas a: «mis jugadores no van a pagar»; «no quiero líos de cámaras»; «¿protección de datos?»; «ya hablé con otra empresa»; «ahora no es buen momento»; «¿cuánto me tocáis a mí?». Por qué: sin esto improvisáis y se cae la venta."
+              }),
+              mkNovaTask("cr-10-compra", "Lista de compra cerrada (2 pistas)", "2026-07-25", {
+                priority: 1,
+                champion: "edgar",
+                description: "Por pista: cámara IP PoE + soporte; switch PoE; Raspberry/miniPC; SSD; Cat6 + conectores; alimentación/SAI si hace falta; QR laminado + soporte; bridas, tacos, cinta, etiquetas. Por cada ítem: precio unidad, precio 2 pistas, enlace, plazo llegada. Tope aprox. 1.000–1.500 € salvo decisión consciente. Por qué: comprar «más o menos» atrasa el montaje una semana."
+              }),
+              mkNovaTask("cr-11-skills", "Herramientas y skills pendientes", "2026-07-25", {
+                champion: "edgar",
+                description: "Revisar: crimpar RJ45 / tester; acceso techo/pared; configurar IP cámara; puertos/red local; servicio en Raspberry; subir vídeo a nube. Si no se domina: tutorial concreto + responsable + deadline. Por qué: el cuello de botella suele ser red e instalación, no la idea."
+              }),
+              mkNovaTask("cr-12-legal", "Textos legales y cartelería", "2026-07-25", {
+                champion: "carmen",
+                description: "Textos cortos: cartel «Esta pista puede grabarse. Al reservar aceptas la grabación.»; aviso en web antes del pago; privacidad básica (qué se guarda, cuánto tiempo, quién accede). Por qué: sin esto muchos clubes dicen que no por miedo, no por el producto."
+              }),
+              mkNovaTask("cr-13-metricas", "Métricas de éxito del piloto", "2026-07-25", {
+                champion: "both",
+                description: "Definir medibles: % partidos grabados sin fallo; % jugadores que pagan tras ver la opción; ingresos/semana por pista; nº incidencias; ¿el club querría seguir tras 30 días? Por qué: si no medís, no sabéis si escalar o corregir."
+              })
+            ]
+          },
+          {
+            id: "step-cr-2",
+            title: "Fase 2 — Montaje del caso piloto (25–29 jul)",
+            tasks: [
+              mkNovaTask("cr-14-arquitectura", "Dibujar arquitectura del flujo", "2026-07-25", {
+                champion: "both",
+                description: "En una hoja: jugador escanea QR → elige pista/hora → paga → se crea reserva+código → llega la hora → cámara/Rasp graba → se sube vídeo → jugador entra con código y lo ve → club ve comisión. Por qué: si el flujo no está claro, la integración es un caos."
+              }),
+              mkNovaTask("cr-15-web", "Web vendible (landing + flujo móvil)", "2026-07-26", {
+                priority: 1,
+                champion: "carmen",
+                description: "Sí o sí: landing clubes (beneficio, cómo funciona, CTA); flujo jugador completo en móvil; confirmación + «revisa tu email»; acceso al partido por código; panel club básico; contacto WhatsApp/email visible. Detalle crítico: tiene que verse bien en el móvil del jugador. Si el móvil falla, el negocio falla."
+              }),
+              mkNovaTask("cr-16-dominio", "Dominio, HTTPS y formularios reales", "2026-07-26", {
+                priority: 1,
+                champion: "carmen",
+                description: "Dominio bien apuntado; HTTPS activo; formulario «quiero piloto» que os llegue de verdad; emails de prueba que no caigan a spam. Por qué: mandar a un dueño a localhost o web a medias mata la credibilidad."
+              }),
+              mkNovaTask("cr-17-rasp", "Raspberry/miniPC operativa", "2026-07-27", {
+                priority: 1,
+                champion: "edgar",
+                description: "Instalar sistema, actualizar, capturar/guardar/subir vídeo; arranque solo al encender; carpeta grabaciones; logs de fallos. Prueba mínima: 2–3 h grabando/subiendo sin colgarse. Por qué: si la Rasp se cae a los 40 min, en un club real os quemáis."
+              }),
+              mkNovaTask("cr-18-red", "Red + PoE + cámaras online", "2026-07-27", {
+                priority: 1,
+                champion: "edgar",
+                description: "Cámara al switch PoE; verificar IP; imagen en directo; medir si la red aguanta subida de vídeo; etiquetar cables (Pista 1 / Pista 2). Por qué: el 70% de problemas de cámaras son de red, no de software bonito."
+              }),
+              mkNovaTask("cr-19-seco", "Montaje en seco de 1–2 pistas", "2026-07-28", {
+                champion: "edgar",
+                description: "Antes del club: probar ángulo (toda la pista); altura/soporte; zonas ciegas; nitidez indoor; cronometrar montaje de 1 pista. Por qué: la primera instalación en club no puede ser vuestra primera vez montando."
+              }),
+              mkNovaTask("cr-20-auto", "Automatizar reserva → grabación", "2026-07-28", {
+                priority: 1,
+                champion: "both",
+                description: "Corazón del producto: reserva pagada 18:00–19:00 Pista 1 → empieza y para sola. Sin botones en recepción. Sin «Edgar dale a grabar». Probar: reserva futura; empieza en 2 min; dos seguidas; cancelación si existe. Por qué: si no es automático, no tenéis producto escalable; tenéis un favor manual."
+              }),
+              mkNovaTask("cr-21-entrega", "Entrega de vídeo por código", "2026-07-28", {
+                priority: 1,
+                champion: "carmen",
+                description: "Cadena: grabación termina → procesa/sube → asociada a código/reserva → jugador reproduce → (ideal) descarga. Definir: cuánto tarda (meta minutos/horas, no «mañana igual»); qué pasa si falla la subida."
+              }),
+              mkNovaTask("cr-22-panel", "Panel mínimo del club", "2026-07-29", {
+                champion: "carmen",
+                description: "Que el club vea: nº reservas/grabaciones; ingresos brutos; su comisión; estado cámaras (ok/caída). No hace falta dashboard precioso: hace falta que el dueño entienda «esto me genera dinero»."
+              }),
+              mkNovaTask("cr-23-test", "Test punta a punta x6", "2026-07-29", {
+                priority: 1,
+                champion: "both",
+                description: "6 veces seguidas: escanear QR → reservar → pagar → esperar franja → grabar → recibir acceso → ver vídeo → ver comisión. Apuntar fallos: crítico (rompe venta) / medio / cosmético. No paséis de fase con críticos abiertos."
+              }),
+              mkNovaTask("cr-24-demo", "Vídeo demo comercial", "2026-07-29", {
+                champion: "both",
+                description: "Vídeo corto 30–60 s: QR → reserva → jugando → ver el partido después. Por qué: vender con prueba visual es mucho más fácil que con teoría."
+              }),
+              mkNovaTask("cr-25-manual", "Manual de instalación + kit", "2026-07-29", {
+                champion: "edgar",
+                description: "Manual 1–2 páginas con fotos: dónde va la cámara; cómo cablear; cómo verificar que graba; qué hacer si no hay imagen. Kit: cables extra, QR extra, cinta, bridas, etiquetas, cargador, tester. Por qué: el día de instalación estaréis nerviosos; el manual evita improvisar."
+              })
+            ]
+          },
+          {
+            id: "step-cr-3",
+            title: "Fase 3 — Venta (29–31 jul)",
+            tasks: [
+              mkNovaTask("cr-26-oferta", "One-pager de oferta", "2026-07-30", {
+                priority: 1,
+                champion: "both",
+                description: "Una página que responda: qué instaláis; qué gana el club; qué pone el club; duración piloto; cuánto cobra el jugador; % del club; qué pasa si no funciona (sin permanencia). Por qué: si no cabe en una página, no está clara."
+              }),
+              mkNovaTask("cr-27-precios", "Precios/packs jugador", "2026-07-30", {
+                champion: "both",
+                description: "Definir precios piloto: partido completo X €; clips/momentos Y €; pack experiencia Z € (mejor valor). Regla: fácil de entender en 3 segundos."
+              }),
+              mkNovaTask("cr-28-acuerdo", "Acuerdo piloto 1 hoja", "2026-07-30", {
+                champion: "both",
+                description: "Acuerdo simple: fechas; nº pistas; comisión; responsabilidades; uso de imagen/aviso grabación; salida sin permanencia. No hace falta contrato de 20 páginas para el piloto, pero sí algo escrito."
+              }),
+              mkNovaTask("cr-29-script", "Script de contacto", "2026-07-30", {
+                champion: "edgar",
+                description: "Mensaje corto: «Hola, somos CourtReplay. Instalamos cámaras en pistas de pádel para que los jugadores puedan llevarse el vídeo del partido. El club no invierte y se queda una comisión. Buscamos 1 club indoor en Madrid para piloto 30 días sin permanencia. ¿Te encaja una llamada de 10 minutos?» Por qué: sin script cada mensaje os cuesta 20 min y sale peor."
+              }),
+              mkNovaTask("cr-30-faq", "FAQ del club", "2026-07-30", {
+                champion: "both",
+                description: "Por escrito: ¿interrumpe el juego? ¿quién paga el hardware? ¿qué pasa si se rompe una cámara? ¿mis empleados tienen que hacer algo? ¿cuándo cobro? ¿puedo pararlo?"
+              }),
+              mkNovaTask("cr-31-lista", "Lista 30 clubes Madrid", "2026-07-30", {
+                priority: 1,
+                champion: "edgar",
+                description: "Por club: nombre; zona; indoor/outdoor; nº pistas; web/IG/teléfono; contacto si aparece; prioridad A/B/C. Prioridad A: indoor, varias pistas, zona buena, pinta premium."
+              }),
+              mkNovaTask("cr-32-outreach1", "Contactar 10 clubes", "2026-07-30", {
+                priority: 1,
+                champion: "edgar",
+                description: "Contactar 10 prioritarios. Registrar en hoja: fecha, canal, respuesta. No esperéis inspiración: es volumen + seguimiento."
+              }),
+              mkNovaTask("cr-33-outreach2", "Follow-up + otros 10", "2026-07-31", {
+                priority: 1,
+                champion: "edgar",
+                description: "Contactar otros 10; reescribir a los que no respondieron (follow-up corto); agendar 1–3 llamadas/visitas. Meta realista julio: 3 conversaciones de verdad + 1 interés serio."
+              }),
+              mkNovaTask("cr-34-reunion", "Reunión/visita de venta", "2026-07-31", {
+                champion: "edgar",
+                description: "Guion 10–15 min: problema del club (diferenciación + ingresos); cómo funciona en 4 pasos; demo/vídeo; condiciones del piloto; cierre: «¿probamos 30 días en 1–2 pistas?»"
+              }),
+              mkNovaTask("cr-35-cierre", "Cierre con fecha de instalación", "2026-07-31", {
+                priority: 1,
+                champion: "both",
+                description: "«Cerrado» = OK por escrito (WhatsApp/email vale) + pistas acordadas + fecha instalación + checklist pre-instalación al club (WiFi, acceso, permiso cartel). Si no hay firma el 31, no pasa nada si hay pipeline vivo. Lo que SÍ debe estar terminado en julio: sistema + oferta + contactos en marcha."
+              }),
+              mkNovaTask("cr-36-medicion", "Plan de medición 7/15/30 días", "2026-07-31", {
+                champion: "both",
+                description: "Post-cierre (aunque caiga en agosto): día de instalación; quién lleva el kit; quién habla con el club; primera medición a los 7 días; revisión a los 15; cierre de evaluación a los 30."
+              })
+            ]
+          }
+        ]
+      };
+    }
+
+    function applyCourtReplayPlan(s) {
+      const PLAN = "courtreplay-july-2026-v1";
+      if (!s || !Array.isArray(s.projects)) return s;
+      if (s.courtreplayPlanApplied === PLAN) return s;
+      const fresh = buildCourtReplayProject();
+      const idx = s.projects.findIndex((p) =>
+        p.id === "emp-replay" ||
+        /courtreplay/i.test(p.title || "") ||
+        /^replay$/i.test((p.title || "").trim())
+      );
+      if (idx >= 0) {
+        const prev = s.projects[idx];
+        s.projects[idx] = {
+          ...fresh,
+          owner: prev.owner || fresh.owner,
+          archived: !!prev.archived
+        };
+      } else {
+        s.projects.splice(1, 0, fresh);
+      }
+      s.courtreplayPlanApplied = PLAN;
+      s.updatedAt = Date.now();
+      return s;
+    }
+
+
     const DEFAULT_SEED = () => ({
       version: 4,
       updatedAt: Date.now(),
       projects: [
         buildNovaCutProject(),
-        {
-          id: "emp-replay",
-          area: "emprendimientos",
-          title: "Replay",
-          badge: "Aterrizando",
-          lede: "MVP claro → piloto → venta.",
-          note: "",
-          steps: [
-            {
-              id: "step-replay-1",
-              title: "Aterrizar la idea",
-              tasks: [
-                { id: "emp-replay-tenemos", label: "¿Qué tenemos?", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-quedamos", label: "¿Con qué nos quedamos?", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-anadimos", label: "¿Qué añadimos?", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-mvp", label: "MVP vs competencia", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-materiales", label: "Estudiar materiales y herramientas", date: "", note: "", done: false, doneAt: null, doneBy: null }
-              ]
-            },
-            {
-              id: "step-replay-2",
-              title: "Montaje caso piloto",
-              tasks: [
-                { id: "emp-replay-web", label: "Montar página web", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-rass", label: "¿RASS?", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-camaras", label: "Montaje cámaras + software", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-prueba", label: "Prueba", date: "", note: "", done: false, doneAt: null, doneBy: null }
-              ]
-            },
-            {
-              id: "step-replay-3",
-              title: "Venta",
-              tasks: [
-                { id: "emp-replay-oferta", label: "Oferta clara", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-clientes", label: "Primeros clientes", date: "", note: "", done: false, doneAt: null, doneBy: null },
-                { id: "emp-replay-cierre", label: "Cierre", date: "", note: "", done: false, doneAt: null, doneBy: null }
-              ]
-            }
-          ]
-        },
+        buildCourtReplayProject(),
         {
           id: "tfg-edgar",
           area: "tfg",
