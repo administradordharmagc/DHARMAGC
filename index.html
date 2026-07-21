@@ -2037,16 +2037,30 @@
       margin: 0; font-family: var(--font-display); font-size: 1.25rem;
       letter-spacing: 0.04em; text-transform: uppercase;
     }
-    .diario-feel, .diario-tasks, .cost-box {
+    .diario-feel, .diario-tasks, .diario-overdue, .cost-box {
       border: 1px solid var(--line); border-radius: var(--radius);
       background: var(--bg-card); padding: 0.9rem 1rem;
       box-shadow: var(--shadow-card);
     }
-    .diario-feel label, .cost-box h4, .diario-tasks h4 {
+    .diario-overdue {
+      border-color: rgba(192, 122, 114, 0.45);
+      background: rgba(192, 122, 114, 0.08);
+    }
+    .diario-feel label, .cost-box h4, .diario-tasks h4, .diario-overdue h4 {
       display: block; margin: 0 0 0.5rem;
       font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--muted); font-family: var(--font-display); font-weight: 700;
     }
+    .diario-overdue h4 { color: #c07a72; }
+    .diario-task .when-late {
+      color: #c07a72; font-weight: 600; margin-left: 0.2rem;
+    }
+    [data-theme="light"] .diario-overdue {
+      background: rgba(192, 122, 114, 0.1);
+      border-color: rgba(160, 90, 82, 0.35);
+    }
+    [data-theme="light"] .diario-overdue h4,
+    [data-theme="light"] .diario-task .when-late { color: #a05048; }
     .diario-feel textarea {
       width: 100%; min-height: 110px; resize: vertical;
       background: var(--input-bg); border: 1px solid var(--line);
@@ -2099,6 +2113,10 @@
     [data-theme="light"] .diario-task, [data-theme="light"] .diario-feel,
     [data-theme="light"] .diario-tasks, [data-theme="light"] .cost-box {
       background: rgba(255,255,255,0.75);
+    }
+    [data-theme="light"] .diario-overdue {
+      background: rgba(192, 122, 114, 0.1);
+      border-color: rgba(160, 90, 82, 0.35);
     }
     .side-link[data-module="diario"] { --hub-accent: #d4c4b0; }
 
@@ -3640,7 +3658,7 @@
       /* iOS Safari: blur/animaciones = crash al cambiar de pestaña */
       .side-nav, .topbar, .kpi, .prio-item, .card, .modal, .cal-shell,
       .settings-tile, .settings-export, .goal-item, .idea-capture, .idea-card,
-      .diario-feel, .diario-tasks, .user-card, .account-chip, .nav-btn,
+      .diario-feel, .diario-tasks, .diario-overdue, .user-card, .account-chip, .nav-btn,
       .fab-bar, .module-chrome, .home-quote, .sync-chip {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
@@ -4953,7 +4971,7 @@
         <div class="toolbar-row" id="toolbarRow">
           <div class="person-filter" id="personFilter">
             <span class="lbl">Ver</span>
-            <button type="button" data-person="" class="active">Todos</button>
+            <button type="button" data-person="" title="Todas las tareas de Carmen y Edgar">Todos</button>
             <button type="button" data-person="carmen" title="Tareas de Carmen y las compartidas">Carmen</button>
             <button type="button" data-person="edgar" title="Tareas de Edgar y las compartidas">Edgar</button>
           </div>
@@ -7030,6 +7048,9 @@
       if (!user) return;
       currentUser = user;
       sessionStorage.setItem(SESSION_KEY, currentUser.id);
+      /* Vista por defecto: tareas propias + compartidas del usuario que entra. */
+      personFilter = currentUser.id;
+      pendientesFocus = "";
       state = normalizeState(loadLocal() || DEFAULT_SEED());
       ensureCloudSpace();
       /* Mostrar ya la app (no esperar a la nube: en móvil se quedaba colgada). */
@@ -7039,7 +7060,7 @@
       paintLegends();
       updatePersonFilterUI();
       renderAll();
-      showView("hub");
+      openModule("pendientes");
       setSyncStatus("Sincronizando…");
       startPolling();
       pullCloud().then((ok) => {
@@ -7328,11 +7349,20 @@
     function paintHubCounts() {
       if (!state) return;
       const today = todayISO();
-      const activeProjects = state.projects.filter((p) => !p.archived).length;
-      const openTasks = allTasks().filter(({ t }) => !t.done).length;
-      const openDated = allCalEntries().filter((x) => x.date && !x.done);
-      const dueToday = openDated.filter((x) => x.date === today).length;
-      const overdueN = openDated.filter((x) => x.date < today).length;
+      const pf = personFilter; /* "" = todos; carmen/edgar = propias + compartidas */
+
+      const activeProjects = state.projects.filter((p) =>
+        !p.archived && matchesProjectOwnerFilter(p, pf)
+      ).length;
+
+      const scopedOpen = allPendienteItems().filter(({ t }) =>
+        !t.done && matchesPersonFilter(t, pf)
+      );
+      const openTasks = scopedOpen.length;
+      const openDated = scopedOpen.filter(({ t }) => !!t.date);
+      const dueToday = openDated.filter(({ t }) => t.date === today).length;
+      const overdueN = openDated.filter(({ t }) => t.date < today).length;
+
       const goalsOpen = (state.goals || []).filter((g) => !g.done).length;
       const ideasOpen = (state.ideas || []).filter((i) => !i.deleted && !i.archived).length;
       const set = (k, v) => {
@@ -7342,6 +7372,8 @@
       set("projects", String(activeProjects));
       set("calendario", overdueN ? `${dueToday}·${overdueN}↓` : String(dueToday || openDated.length));
       set("pendientes", overdueN ? `${openTasks}·${overdueN}↓` : String(openTasks));
+
+      /* Panel diario siempre es del usuario logueado (propias + compartidas). */
       const myToday = currentUser ? (() => {
         const uid = currentUser.id;
         const fromProjects = allTasks().filter(({ t, p }) =>
@@ -7352,11 +7384,13 @@
         ).length;
         return fromProjects + fromAgenda;
       })() : 0;
-      set("diario", String(myToday));
+      const myOverdue = currentUser ? myOverdueTasks(today).filter((x) => !x.t.done).length : 0;
+      set("diario", myOverdue ? `${myToday}·${myOverdue}↓` : String(myToday));
       set("goals", String(goalsOpen));
       set("ideas", String(ideasOpen));
       document.querySelector('.side-link[data-module="calendario"]')?.classList.toggle("has-overdue", overdueN > 0);
       document.querySelector('.side-link[data-module="pendientes"]')?.classList.toggle("has-overdue", overdueN > 0);
+      document.querySelector('.side-link[data-module="diario"]')?.classList.toggle("has-overdue", myOverdue > 0);
     }
 
     function syncSharedSearchUI() {
@@ -7510,6 +7544,32 @@
         const tb = b.t.time || "99:99";
         if (ta !== tb) return ta.localeCompare(tb);
         return effectivePriority(a.t) - effectivePriority(b.t);
+      });
+    }
+
+    /** Tareas/agenda del usuario (propias + compartidas) con fecha anterior a hoy y sin completar. */
+    function myOverdueTasks(iso) {
+      if (!currentUser) return [];
+      const uid = currentUser.id;
+      const cutoff = iso || todayISO();
+      const fromProjects = allTasks()
+        .filter(({ t, p }) =>
+          !p.archived && !t.done && t.date && t.date < cutoff &&
+          matchesPersonFilter(t, uid) && matchesSearch(t, p)
+        )
+        .map(({ p, s, t }) => ({ kind: "task", p, s, t }));
+      const fromAgenda = (state.calEvents || [])
+        .filter((e) =>
+          e && !e.deleted && !e.done && e.date && e.date < cutoff &&
+          matchesPersonFilter(e, uid) && matchesSearch(e, agendaLibreProject())
+        )
+        .map((e) => ({ kind: "event", p: agendaLibreProject(), s: null, t: e }));
+      return fromProjects.concat(fromAgenda).sort((a, b) => {
+        const d = (a.t.date || "").localeCompare(b.t.date || "");
+        if (d) return d;
+        const pd = effectivePriority(a.t) - effectivePriority(b.t);
+        if (pd) return pd;
+        return (a.t.time || "99:99").localeCompare(b.t.time || "99:99");
       });
     }
 
@@ -7765,32 +7825,46 @@
       });
     }
 
-    function diarioTasksHtml(items) {
+    function diarioTasksHtml(items, opts = {}) {
+      const title = opts.title || `Tareas de hoy (${items.length}) · proyectos y agenda libre`;
+      const allowReorder = opts.allowReorder !== false;
+      const showDate = !!opts.showDate;
+      const emptyMsg = opts.empty || "Nada con fecha de hoy. Las de proyecto y la agenda libre (compartidas) aparecen aquí.";
       return `
-        <h4>Tareas de hoy (${items.length}) · proyectos y agenda libre</h4>
+        <h4>${escapeHtml(title)}</h4>
         ${items.length ? items.map((item) => {
           const { p, t, kind } = item;
           applySchedulePriority(t);
           const pr = effectivePriority(t);
           const accent = kind === "event" ? projectAccent("__events__") : projectAccent(p.id);
           const where = kind === "event" ? "Agenda libre" : (p.title || "Proyecto");
-          return `<div class="diario-task ${t.done ? "done" : ""} tone-p${pr}" style="--proj-accent:${accent}">
-            <div class="diario-ord">
+          const late = showDate && t.date
+            ? (() => {
+                const cd = deadlineLabel(t.date);
+                return ` · <span class="when-late">${escapeHtml(fmtDay(t.date))}${cd ? " · " + escapeHtml(cd.text) : ""}</span>`;
+              })()
+            : "";
+          const ord = allowReorder
+            ? `<div class="diario-ord">
               <button type="button" data-up="${t.id}" title="Subir">▲</button>
               <button type="button" data-down="${t.id}" title="Bajar">▼</button>
-            </div>
+            </div>`
+            : `<div class="diario-ord" aria-hidden="true"></div>`;
+          return `<div class="diario-task ${t.done ? "done" : ""} tone-p${pr}" style="--proj-accent:${accent}">
+            ${ord}
             <div>
               <div class="label">${priorityDot(pr, t.done)} ${escapeHtml(t.label)}</div>
-              <div class="meta">${escapeHtml(where)} · ${CHAMPIONS[taskChampion(t)].label}${t.shortCode ? " · " + escapeHtml(t.shortCode) : ""}</div>
+              <div class="meta">${escapeHtml(where)} · ${CHAMPIONS[taskChampion(t)].label}${t.shortCode ? " · " + escapeHtml(t.shortCode) : ""}${late}</div>
             </div>
             <input type="time" data-time="${t.id}" value="${t.time || ""}" title="Hora" />
             <input class="check" type="checkbox" data-toggle="${t.id}" ${t.done ? "checked" : ""} title="Hecha" />
           </div>`;
-        }).join("") : `<p class="empty">Nada con fecha de hoy. Las de proyecto y la agenda libre (compartidas) aparecen aquí.</p>`}
+        }).join("") : `<p class="empty">${escapeHtml(emptyMsg)}</p>`}
       `;
     }
 
     function bindDiarioTaskControls(root, iso) {
+      if (!root) return;
       root.querySelectorAll("[data-up]").forEach((btn) => {
         btn.addEventListener("click", () => moveDayTask(iso, btn.dataset.up, -1));
       });
@@ -7835,16 +7909,37 @@
       flushDiarioFeel();
       const iso = todayISO();
       const items = myDayTasks(iso);
+      const overdue = myOverdueTasks(iso);
       const bucket = ensureJournalBucket(currentUser.id);
       const feel = (bucket[iso] && bucket[iso].text) || "";
       const label = iso.split("-");
       const nice = label[2] + "/" + label[1] + "/" + label[0];
       const feelEl = root.querySelector("#diarioFeel");
       const tasksEl = root.querySelector(".diario-tasks");
+      const overdueEl = root.querySelector(".diario-overdue");
       const feelFocused = document.activeElement === feelEl;
+
+      const overdueHtml = overdue.length
+        ? diarioTasksHtml(overdue, {
+            title: `Vencidas · no hechas (${overdue.length})`,
+            allowReorder: false,
+            showDate: true,
+            empty: "No hay tareas vencidas."
+          })
+        : "";
 
       /* Si estás escribiendo, no reconstruir el textarea (solo las tareas). */
       if (feelFocused && feelEl && tasksEl) {
+        if (overdueEl) {
+          if (overdueHtml) {
+            overdueEl.innerHTML = overdueHtml;
+            overdueEl.hidden = false;
+            bindDiarioTaskControls(overdueEl, iso);
+          } else {
+            overdueEl.innerHTML = "";
+            overdueEl.hidden = true;
+          }
+        }
         tasksEl.innerHTML = diarioTasksHtml(items);
         bindDiarioTaskControls(tasksEl, iso);
         return;
@@ -7855,12 +7950,14 @@
           <label for="diarioFeel">¿Cómo me he sentido hoy? · ${nice}</label>
           <textarea id="diarioFeel" placeholder="Se guarda solo (historial completo al exportar).">${escapeHtml(feel)}</textarea>
         </div>
+        <div class="diario-overdue" ${overdue.length ? "" : "hidden"}>${overdueHtml}</div>
         <div class="diario-tasks">
           ${diarioTasksHtml(items)}
         </div>
       `;
 
       bindDiarioFeel(root.querySelector("#diarioFeel"), iso, nice);
+      if (overdue.length) bindDiarioTaskControls(root.querySelector(".diario-overdue"), iso);
       bindDiarioTaskControls(root.querySelector(".diario-tasks"), iso);
     }
 
@@ -7879,8 +7976,7 @@
 
     function renderPendientes() {
       const today = todayISO();
-      const baseAll = allPendienteItems();
-      const baseToolbar = baseAll.filter(({ t }) => matchesPersonFilter(t, personFilter));
+      const baseToolbar = allPendienteItems().filter(({ t }) => matchesPersonFilter(t, personFilter));
 
       const pending = baseToolbar.filter(({ t }) => !t.done);
       const completed = baseToolbar.filter(({ t }) => t.done);
@@ -7894,19 +7990,17 @@
       const agendaOpen = pending.filter(({ kind }) => kind === "event").length;
       const agendaTotal = baseToolbar.filter(({ kind }) => kind === "event").length;
 
-      const nCarmen = baseAll.filter(({ t }) => taskChampion(t) === "carmen").length;
-      const nEdgar = baseAll.filter(({ t }) => taskChampion(t) === "edgar").length;
-      const nBoth = baseAll.filter(({ t }) => taskChampion(t) === "both").length;
+      const nCarmen = baseToolbar.filter(({ t }) => taskChampion(t) === "carmen").length;
+      const nEdgar = baseToolbar.filter(({ t }) => taskChampion(t) === "edgar").length;
+      const nBoth = baseToolbar.filter(({ t }) => taskChampion(t) === "both").length;
 
-      let viewItems = baseAll.slice();
+      let viewItems = baseToolbar.slice();
       const focus = pendientesFocus;
       if (focus === "carmen" || focus === "edgar" || focus === "both") {
         viewItems = viewItems.filter(({ t }) => taskChampion(t) === focus);
       } else if (focus === "agenda") {
         viewItems = viewItems.filter(({ kind }) => kind === "event");
-        viewItems = viewItems.filter(({ t }) => matchesPersonFilter(t, personFilter));
       } else {
-        viewItems = viewItems.filter(({ t }) => matchesPersonFilter(t, personFilter));
         if (focus === "pending") viewItems = viewItems.filter(({ t }) => !t.done);
         else if (focus === "urgent") viewItems = viewItems.filter(({ t }) => !t.done && taskPriority(t) === 1);
         else if (focus === "due") {
