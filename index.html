@@ -4010,7 +4010,7 @@
     /** Prioridad base = la que asignáis a mano (se guarda en t.priority). */
     function basePriority(t) {
       const n = Number(t?.priority);
-      return n >= 1 && n <= 4 ? n : 2;
+      return n >= 1 && n <= 4 ? n : 4; // sin prioridad manual → baja
     }
 
     /**
@@ -4400,7 +4400,7 @@
         time: opts.time || "",
         note: "",
         description: opts.description || "",
-        priority: opts.priority || 2,
+        priority: [1, 2, 3, 4].includes(opts.priority) ? opts.priority : 4,
         champion: opts.champion || "both",
         done: false,
         doneAt: null,
@@ -6371,14 +6371,14 @@
         <div class="row"><label>Descripción (opcional)</label><textarea id="mDesc" placeholder="Detalle…"></textarea></div>
         <div class="row"><label>Fecha</label><input type="date" id="mDate" value="${prefillDate || todayISO()}" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
         <div class="row"><label>Hora (opcional)</label><input type="time" id="mTime" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
-        <div class="row"><label>Prioridad</label><div id="mPrio">${priorityButtons(2)}</div></div>
+        <div class="row"><label>Prioridad</label><div id="mPrio">${priorityButtons(4)}</div></div>
         <div class="row"><label>Champion</label><div id="mChamp">${championDropdown("both")}</div></div>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" id="mCancel">Cancelar</button>
           <button type="button" class="btn btn-gold" id="mOk">Crear</button>
         </div>
       `);
-      let chosen = 2;
+      let chosen = 4;
       let champ = "both";
       function rebindPrio() {
         bindDropdown(modalBody.querySelector("#mPrio"), (val) => {
@@ -7194,7 +7194,7 @@
         <div class="row"><label>Hora (opcional)</label><input type="time" id="mTime" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
         <div class="row">
           <label>Prioridad</label>
-          <div id="mPrio">${priorityButtons(2)}</div>
+          <div id="mPrio">${priorityButtons(4)}</div>
         </div>
         <div class="row">
           <label>Champion</label>
@@ -7205,7 +7205,7 @@
           <button type="button" class="btn btn-gold" id="mOk">Añadir</button>
         </div>
       `);
-      let chosen = 2;
+      let chosen = 4;
       let champ = "both";
       function rebindPrio() {
         bindDropdown(modalBody.querySelector("#mPrio"), (val) => {
