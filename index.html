@@ -2906,6 +2906,7 @@
       color: var(--text);
       box-shadow: inset 3px 0 0 var(--hub-accent);
     }
+    .side-link[data-module="diario"] { --hub-accent: #d4c4b0; }
     .side-link[data-module="projects"] { --hub-accent: #d8dee6; }
     .side-link[data-module="calendario"] { --hub-accent: #b8c0c8; }
     .side-link[data-module="pendientes"] { --hub-accent: #c5d4c8; }
@@ -3827,6 +3828,11 @@
             <span class="side-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M7 10.5V20h10v-9.5"/></svg></span>
             <span class="side-link-text">Inicio</span>
             <span class="side-link-count"></span>
+          </button>
+          <button type="button" class="side-link" data-module="diario" title="Panel diario">
+            <span class="side-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M8 14h5"/></svg></span>
+            <span class="side-link-text">Panel diario</span>
+            <span class="side-link-count" data-hub-count="diario">—</span>
           </button>
           <button type="button" class="side-link" data-module="projects" title="Proyectos">
             <span class="side-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2"/></svg></span>
@@ -5652,7 +5658,7 @@
       projects: { title: "Proyectos", panel: "panel-projects" },
       calendario: { title: "Calendario", panel: "panel-calendario" },
       pendientes: { title: "Tareas", panel: "panel-pendientes" },
-      diario: { title: "Mi día", panel: "panel-diario" },
+      diario: { title: "Panel diario", panel: "panel-diario" },
       goals: { title: "Objetivos", panel: "panel-goals" },
       ideas: { title: "Ideas", panel: "panel-ideas" },
       stats: { title: "Estadísticas", panel: "panel-stats" },
@@ -5757,7 +5763,7 @@
           openAddTask(first.id, first.steps[first.steps.length - 1].id);
         };
       } else if (moduleId === "diario") {
-        box.innerHTML = `<button type="button" class="btn btn-ghost" id="btnExportDiario">Exportar diario Excel</button>`;
+        box.innerHTML = `<button type="button" class="btn btn-ghost" id="btnExportDiario">Exportar Excel (.xlsx)</button>`;
         box.querySelector("#btnExportDiario").onclick = () => exportJournalXlsx();
       } else {
         box.innerHTML = "";
@@ -6043,17 +6049,45 @@
 
     function exportJournalXlsx() {
       if (!currentUser) return toast("Entra con un usuario primero");
-      const bucket = ensureJournalBucket(currentUser.id);
-      const rows = [["Día", "Cómo me he sentido", "Actualizado"]];
+      const uid = currentUser.id;
+      const bucket = ensureJournalBucket(uid);
+      const feelRows = [["Día", "Cómo me he sentido", "Actualizado"]];
       Object.keys(bucket).sort().forEach((day) => {
         const entry = bucket[day] || {};
-        rows.push([day, entry.text || "", entry.updatedAt ? new Date(entry.updatedAt).toLocaleString("es-ES") : ""]);
+        feelRows.push([day, entry.text || "", entry.updatedAt ? new Date(entry.updatedAt).toLocaleString("es-ES") : ""]);
       });
-      if (rows.length === 1) rows.push(["—", "(sin entradas todavía)", ""]);
-      downloadXlsx("diario-" + (currentUser.short || currentUser.id) + ".xlsx", [
-        { name: "Diario", rows }
+      if (feelRows.length === 1) feelRows.push(["—", "(sin entradas todavía)", ""]);
+
+      const taskRows = [["Día", "Tarea", "Proyecto", "Hora", "Hecha", "Prioridad", "Champion", "Nota"]];
+      const days = new Set([
+        ...Object.keys(bucket),
+        ...allTasks()
+          .filter(({ t, p }) => !p.archived && t.date && matchesPersonFilter(t, uid))
+          .map(({ t }) => t.date)
       ]);
-      toast("Excel del diario descargado");
+      [...days].sort().forEach((day) => {
+        allTasks()
+          .filter(({ t, p }) => !p.archived && t.date === day && matchesPersonFilter(t, uid))
+          .forEach(({ t, p }) => {
+            taskRows.push([
+              day,
+              t.label || "",
+              p.title || "",
+              t.time || "",
+              t.done ? "Sí" : "No",
+              PRIORITY[effectivePriority(t)]?.label || "",
+              CHAMPIONS[taskChampion(t)]?.label || "",
+              t.note || ""
+            ]);
+          });
+      });
+      if (taskRows.length === 1) taskRows.push(["—", "(sin tareas)", "", "", "", "", "", ""]);
+
+      downloadXlsx("panel-diario-" + (currentUser.short || uid) + ".xlsx", [
+        { name: "Sentir", rows: feelRows },
+        { name: "Tareas por día", rows: taskRows }
+      ]);
+      toast("Excel del panel diario descargado (.xlsx)");
     }
 
     function renderDiario() {
@@ -6073,7 +6107,7 @@
       root.innerHTML = `
         <div class="diario-head">
           <h3>Hoy · ${nice} · ${escapeHtml(currentUser.short)}</h3>
-          <button type="button" class="btn btn-ghost" id="diarioExport">Exportar diario Excel</button>
+          <button type="button" class="btn btn-ghost" id="diarioExport">Exportar Excel (.xlsx)</button>
         </div>
         <div class="diario-feel">
           <label for="diarioFeel">¿Cómo me he sentido hoy?</label>
