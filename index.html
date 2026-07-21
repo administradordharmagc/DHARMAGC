@@ -7342,9 +7342,16 @@
       set("projects", String(activeProjects));
       set("calendario", overdueN ? `${dueToday}·${overdueN}↓` : String(dueToday || openDated.length));
       set("pendientes", overdueN ? `${openTasks}·${overdueN}↓` : String(openTasks));
-      const myToday = currentUser ? allTasks().filter(({ t, p }) =>
-        !p.archived && t.date === today && !t.done && matchesPersonFilter(t, currentUser.id)
-      ).length : 0;
+      const myToday = currentUser ? (() => {
+        const uid = currentUser.id;
+        const fromProjects = allTasks().filter(({ t, p }) =>
+          !p.archived && t.date === today && !t.done && matchesPersonFilter(t, uid)
+        ).length;
+        const fromAgenda = (state.calEvents || []).filter((e) =>
+          e && !e.deleted && e.date === today && !e.done && matchesPersonFilter(e, uid)
+        ).length;
+        return fromProjects + fromAgenda;
+      })() : 0;
       set("diario", String(myToday));
       set("goals", String(goalsOpen));
       set("ideas", String(ideasOpen));
@@ -7469,12 +7476,25 @@
       return state.dailyPlans[userId][iso];
     }
 
+    function agendaLibreProject() {
+      return { id: "__agenda__", title: "Agenda libre", archived: false };
+    }
+
     function myDayTasks(iso) {
       if (!currentUser) return [];
       const uid = currentUser.id;
-      const items = allTasks().filter(({ t, p }) =>
-        !p.archived && t.date === iso && matchesPersonFilter(t, uid) && matchesSearch(t, p)
-      );
+      const fromProjects = allTasks()
+        .filter(({ t, p }) =>
+          !p.archived && t.date === iso && matchesPersonFilter(t, uid) && matchesSearch(t, p)
+        )
+        .map(({ p, s, t }) => ({ kind: "task", p, s, t }));
+      const fromAgenda = (state.calEvents || [])
+        .filter((e) =>
+          e && !e.deleted && e.date === iso &&
+          matchesPersonFilter(e, uid) && matchesSearch(e, agendaLibreProject())
+        )
+        .map((e) => ({ kind: "event", p: agendaLibreProject(), s: null, t: e }));
+      const items = fromProjects.concat(fromAgenda);
       const plan = ensureDailyPlan(uid, iso);
       const order = plan.order || [];
       return items.slice().sort((a, b) => {
@@ -7491,6 +7511,14 @@
         if (ta !== tb) return ta.localeCompare(tb);
         return effectivePriority(a.t) - effectivePriority(b.t);
       });
+    }
+
+    function resolveDayItem(id) {
+      const meta = findTask(id);
+      if (meta) return { kind: "task", t: meta.task, p: meta.project, s: meta.step };
+      const ev = (state.calEvents || []).find((e) => e.id === id);
+      if (ev) return { kind: "event", t: ev, p: agendaLibreProject(), s: null };
+      return null;
     }
 
     function moveDayTask(iso, taskId, dir) {
@@ -7621,7 +7649,10 @@
         ...Object.keys(bucket),
         ...allTasks()
           .filter(({ t, p }) => !p.archived && t.date && matchesPersonFilter(t, uid))
-          .map(({ t }) => t.date)
+          .map(({ t }) => t.date),
+        ...(state.calEvents || [])
+          .filter((e) => e && !e.deleted && e.date && matchesPersonFilter(e, uid))
+          .map((e) => e.date)
       ]);
       [...days].sort().forEach((day) => {
         allTasks()
@@ -7636,6 +7667,20 @@
               PRIORITY[effectivePriority(t)]?.label || "",
               CHAMPIONS[taskChampion(t)]?.label || "",
               t.note || ""
+            ]);
+          });
+        (state.calEvents || [])
+          .filter((e) => e && !e.deleted && e.date === day && matchesPersonFilter(e, uid))
+          .forEach((e) => {
+            taskRows.push([
+              day,
+              e.label || "",
+              "Agenda libre",
+              e.time || "",
+              e.done ? "Sí" : "No",
+              PRIORITY[effectivePriority(e)]?.label || "",
+              CHAMPIONS[taskChampion(e)]?.label || "",
+              e.note || ""
             ]);
           });
       });
@@ -7722,23 +7767,26 @@
 
     function diarioTasksHtml(items) {
       return `
-        <h4>Tareas de hoy (${items.length}) · propias y compartidas</h4>
-        ${items.length ? items.map(({ p, t }) => {
+        <h4>Tareas de hoy (${items.length}) · proyectos y agenda libre</h4>
+        ${items.length ? items.map((item) => {
+          const { p, t, kind } = item;
           applySchedulePriority(t);
           const pr = effectivePriority(t);
-          return `<div class="diario-task ${t.done ? "done" : ""} tone-p${pr}" style="--proj-accent:${projectAccent(p.id)}">
+          const accent = kind === "event" ? projectAccent("__events__") : projectAccent(p.id);
+          const where = kind === "event" ? "Agenda libre" : (p.title || "Proyecto");
+          return `<div class="diario-task ${t.done ? "done" : ""} tone-p${pr}" style="--proj-accent:${accent}">
             <div class="diario-ord">
               <button type="button" data-up="${t.id}" title="Subir">▲</button>
               <button type="button" data-down="${t.id}" title="Bajar">▼</button>
             </div>
             <div>
               <div class="label">${priorityDot(pr, t.done)} ${escapeHtml(t.label)}</div>
-              <div class="meta">${escapeHtml(p.title)} · ${CHAMPIONS[taskChampion(t)].label}${t.shortCode ? " · " + escapeHtml(t.shortCode) : ""}</div>
+              <div class="meta">${escapeHtml(where)} · ${CHAMPIONS[taskChampion(t)].label}${t.shortCode ? " · " + escapeHtml(t.shortCode) : ""}</div>
             </div>
             <input type="time" data-time="${t.id}" value="${t.time || ""}" title="Hora" />
             <input class="check" type="checkbox" data-toggle="${t.id}" ${t.done ? "checked" : ""} title="Hecha" />
           </div>`;
-        }).join("") : `<p class="empty">No tienes tareas con fecha de hoy. Las compartidas (Carmen y Edgar) también aparecen aquí.</p>`}
+        }).join("") : `<p class="empty">Nada con fecha de hoy. Las de proyecto y la agenda libre (compartidas) aparecen aquí.</p>`}
       `;
     }
 
@@ -7752,11 +7800,11 @@
       root.querySelectorAll("[data-time]").forEach((inp) => {
         inp.addEventListener("change", () => {
           flushDiarioFeel();
-          const meta = findTask(inp.dataset.time);
-          if (!meta) return;
-          meta.task.time = normalizeTime(inp.value || "");
-          applySchedulePriority(meta.task);
-          logActivity("fecha", `Hora «${meta.task.label}»: ${meta.task.time || "sin hora"}`);
+          const row = resolveDayItem(inp.dataset.time);
+          if (!row) return;
+          row.t.time = normalizeTime(inp.value || "");
+          applySchedulePriority(row.t);
+          logActivity("fecha", `Hora «${row.t.label}»: ${row.t.time || "sin hora"}`);
           scheduleSave(true);
           renderDiario();
           paintHubCounts();
@@ -7765,12 +7813,12 @@
       root.querySelectorAll("[data-toggle]").forEach((chk) => {
         chk.addEventListener("change", () => {
           flushDiarioFeel();
-          const meta = findTask(chk.dataset.toggle);
-          if (!meta) return;
-          meta.task.done = chk.checked;
-          meta.task.doneAt = chk.checked ? todayISO() : null;
-          meta.task.doneBy = chk.checked ? currentUser.id : null;
-          logActivity(chk.checked ? "completar" : "reabrir", `«${meta.task.label}»`);
+          const row = resolveDayItem(chk.dataset.toggle);
+          if (!row) return;
+          row.t.done = chk.checked;
+          row.t.doneAt = chk.checked ? todayISO() : null;
+          row.t.doneBy = chk.checked ? currentUser.id : null;
+          logActivity(chk.checked ? "completar" : "reabrir", `«${row.t.label}»`);
           scheduleSave(true);
           renderAll();
         });
@@ -7817,9 +7865,7 @@
     }
 
 
-    function agendaLibreProject() {
-      return { id: "__agenda__", title: "Agenda libre", archived: false };
-    }
+
 
     function allPendienteItems() {
       const fromProjects = allTasks()
