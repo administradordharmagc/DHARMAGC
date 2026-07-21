@@ -5250,7 +5250,7 @@
     ];
 
     let personFilter = ""; // "" | edgar | carmen
-    let pendientesFocus = ""; // "" | pending | urgent | due | done | carmen | edgar | both
+    let pendientesFocus = ""; // "" | pending | urgent | due | done | agenda | carmen | edgar | both
     let sharedQuery = ""; // búsqueda compartida (código + nombre)
 
     /** Prioridad base = la que asignáis a mano (se guarda en t.priority). */
@@ -7817,9 +7817,23 @@
     }
 
 
+    function agendaLibreProject() {
+      return { id: "__agenda__", title: "Agenda libre", archived: false };
+    }
+
+    function allPendienteItems() {
+      const fromProjects = allTasks()
+        .filter(({ t, p }) => !p.archived && matchesSearch(t, p))
+        .map(({ p, s, t }) => ({ kind: "task", p, s, t }));
+      const fromAgenda = (state.calEvents || [])
+        .filter((e) => e && !e.deleted && matchesSearch(e, agendaLibreProject()))
+        .map((e) => ({ kind: "event", p: agendaLibreProject(), s: null, t: e }));
+      return fromProjects.concat(fromAgenda);
+    }
+
     function renderPendientes() {
       const today = todayISO();
-      const baseAll = allTasks().filter(({ t, p }) => !p.archived && matchesSearch(t, p));
+      const baseAll = allPendienteItems();
       const baseToolbar = baseAll.filter(({ t }) => matchesPersonFilter(t, personFilter));
 
       const pending = baseToolbar.filter(({ t }) => !t.done);
@@ -7831,6 +7845,8 @@
       const doneCount = completed.length;
       const total = baseToolbar.length;
       const pct = total ? Math.round((doneCount / total) * 100) : 0;
+      const agendaOpen = pending.filter(({ kind }) => kind === "event").length;
+      const agendaTotal = baseToolbar.filter(({ kind }) => kind === "event").length;
 
       const nCarmen = baseAll.filter(({ t }) => taskChampion(t) === "carmen").length;
       const nEdgar = baseAll.filter(({ t }) => taskChampion(t) === "edgar").length;
@@ -7840,6 +7856,9 @@
       const focus = pendientesFocus;
       if (focus === "carmen" || focus === "edgar" || focus === "both") {
         viewItems = viewItems.filter(({ t }) => taskChampion(t) === focus);
+      } else if (focus === "agenda") {
+        viewItems = viewItems.filter(({ kind }) => kind === "event");
+        viewItems = viewItems.filter(({ t }) => matchesPersonFilter(t, personFilter));
       } else {
         viewItems = viewItems.filter(({ t }) => matchesPersonFilter(t, personFilter));
         if (focus === "pending") viewItems = viewItems.filter(({ t }) => !t.done);
@@ -7873,10 +7892,15 @@
             <div class="kpi-value">${dueToday.length + overdue.length}</div>
             <div class="kpi-hint">${dueToday.length} hoy · ${overdue.length} vencidas</div>
           </button>
+          <button type="button" class="kpi${act("agenda")}" data-task-focus="agenda" aria-pressed="${pendientesFocus === "agenda"}">
+            <div class="kpi-label">Agenda libre</div>
+            <div class="kpi-value">${agendaOpen}</div>
+            <div class="kpi-hint">${agendaTotal} sin proyecto · calendario</div>
+          </button>
           <button type="button" class="kpi silver-tone${act("done")}" data-task-focus="done" aria-pressed="${pendientesFocus === "done"}">
             <div class="kpi-label">Completadas</div>
             <div class="kpi-value">${doneCount}</div>
-            <div class="kpi-hint">${pct}% del total · ${total} tareas</div>
+            <div class="kpi-hint">${pct}% del total · ${total} ítems</div>
           </button>
           <button type="button" class="kpi${act("carmen")}" data-task-focus="carmen" aria-pressed="${pendientesFocus === "carmen"}">
             <div class="kpi-label">Carmen</div>
@@ -7915,7 +7939,8 @@
       const el = document.getElementById("prioList");
       if (!el) return;
 
-      function rowHtml({ p, t }, isDone) {
+      function rowHtml(item, isDone) {
+        const { p, t, kind } = item;
         const pr = effectivePriority(t);
         const ch = taskChampion(t);
         const isOverdue = !isDone && t.date && t.date < today;
@@ -7930,8 +7955,9 @@
             })()
           : `<div class="prio-date">—<span>sin fecha</span></div>`;
         const tone = isDone ? "tone-done" : `tone-p${pr}`;
+        const where = kind === "event" ? "Agenda libre" : (p.title || "Proyecto");
         return `
-          <li class="prio-item ${tone} ${isOverdue ? "overdue" : ""} ${isToday ? "today" : ""}" data-task-row="${t.id}">
+          <li class="prio-item ${tone} ${isOverdue ? "overdue" : ""} ${isToday ? "today" : ""} ${kind === "event" ? "is-agenda" : ""}" data-task-row="${t.id}" data-item-kind="${kind}">
             ${dateBlock}
             <div class="prio-body">
               <strong>
@@ -7940,7 +7966,7 @@
               </strong>
               <div class="sub">
                 <span class="code-chip">${escapeHtml(t.shortCode || "—")}</span>
-                · ${escapeHtml(p.title)}
+                · ${escapeHtml(where)}
                 · ${CHAMPIONS[ch].label}
                 ${t.time ? ` · ${escapeHtml(t.time)}` : ""}
                 ${cd ? ` · <span class="countdown ${cd.late ? "late" : ""}">${cd.text}</span>` : ""}
@@ -7953,10 +7979,10 @@
                 <button type="button" class="mini ${hasDesc ? "has-content" : ""}" data-act="desc">Descripción</button>
                 <button type="button" class="mini ${hasNote ? "has-content" : ""}" data-act="note">Nota</button>
               </div>
-              <div class="task-note" data-pane="desc"><textarea data-field="description" placeholder="Contexto estable de la tarea…">${escapeHtml(t.description || "")}</textarea></div>
+              <div class="task-note" data-pane="desc"><textarea data-field="description" placeholder="Contexto estable…">${escapeHtml(t.description || "")}</textarea></div>
               <div class="task-note" data-pane="note"><textarea data-field="note" placeholder="Apunte del día a día…">${escapeHtml(t.note || "")}</textarea></div>
             </div>
-            <input class="check" type="checkbox" data-toggle="${t.id}" ${isDone ? "checked" : ""} title="Completar" />
+            <input class="check" type="checkbox" data-toggle="${t.id}" data-item-kind="${kind}" ${isDone ? "checked" : ""} title="Completar" />
           </li>
         `;
       }
@@ -7979,21 +8005,32 @@
 
       el.querySelectorAll("[data-toggle]").forEach((chk) => {
         chk.addEventListener("change", () => {
-          const meta = findTask(chk.dataset.toggle);
-          if (!meta) return;
-          meta.task.done = chk.checked;
-          meta.task.doneAt = chk.checked ? todayISO() : null;
-          meta.task.doneBy = chk.checked ? currentUser.id : null;
-          logActivity(chk.checked ? "completar" : "reabrir", `«${meta.task.label}» (${meta.task.shortCode})`);
+          const id = chk.dataset.toggle;
+          const kind = chk.dataset.itemKind || "task";
+          let row = null;
+          if (kind === "event") {
+            row = (state.calEvents || []).find((e) => e.id === id);
+          } else {
+            const meta = findTask(id);
+            row = meta?.task || null;
+          }
+          if (!row) return;
+          row.done = chk.checked;
+          row.doneAt = chk.checked ? todayISO() : null;
+          row.doneBy = chk.checked ? currentUser.id : null;
+          logActivity(chk.checked ? "completar" : "reabrir", `«${row.label}» (${row.shortCode || "—"})`);
           scheduleSave(true);
           renderAll();
         });
       });
 
       el.querySelectorAll("[data-task-row]").forEach((row) => {
-        const meta = findTask(row.dataset.taskRow);
-        if (!meta) return;
-        const t = meta.task;
+        const id = row.dataset.taskRow;
+        const kind = row.dataset.itemKind || "task";
+        let t = null;
+        if (kind === "event") t = (state.calEvents || []).find((e) => e.id === id);
+        else t = findTask(id)?.task || null;
+        if (!t) return;
         row.querySelectorAll("[data-act]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const pane = row.querySelector(`[data-pane="${btn.dataset.act === "desc" ? "desc" : "note"}"]`);
@@ -8010,9 +8047,9 @@
             const has = !!(next || "").trim();
             const btn = row.querySelector(`[data-act="${field === "description" ? "desc" : "note"}"]`);
             btn?.classList.toggle("has-content", has);
-            if (!prev && has) logActivity(field === "note" ? "nota" : "descripción", `Creó ${field} en «${t.label}» (${t.shortCode})`);
-            else if (prev && !has) logActivity(field === "note" ? "nota" : "descripción", `Eliminó ${field} de «${t.label}» (${t.shortCode})`);
-            else logActivity(field === "note" ? "nota" : "descripción", `Editó ${field} de «${t.label}» (${t.shortCode})`);
+            if (!prev && has) logActivity(field === "note" ? "nota" : "descripción", `Creó ${field} en «${t.label}» (${t.shortCode || "—"})`);
+            else if (prev && !has) logActivity(field === "note" ? "nota" : "descripción", `Eliminó ${field} de «${t.label}» (${t.shortCode || "—"})`);
+            else logActivity(field === "note" ? "nota" : "descripción", `Editó ${field} de «${t.label}» (${t.shortCode || "—"})`);
             scheduleSave(true);
           });
         });
@@ -8105,7 +8142,7 @@
         if (calProjectFilter && item.p.id !== calProjectFilter) return false;
       } else {
         if (!matchesPersonFilter(item.t, personFilter)) return false;
-        if (sharedQuery && !matchesSearch(item.t, { title: "Evento suelto" })) return false;
+        if (sharedQuery && !matchesSearch(item.t, { title: "Agenda libre" })) return false;
         if (calAreaFilter) return false;
         if (calProjectFilter && calProjectFilter !== "__events__") return false;
       }
@@ -8136,7 +8173,7 @@
         if (!map.has(key)) {
           map.set(key, {
             key,
-            title: item.kind === "event" ? "Eventos sueltos" : (item.p?.title || "Proyecto"),
+            title: item.kind === "event" ? "Agenda libre" : (item.p?.title || "Proyecto"),
             accent: projectAccent(key),
             items: []
           });
@@ -8156,7 +8193,7 @@
       const area = document.getElementById("calAreaFilter");
       if (proj) {
         const cur = calProjectFilter;
-        proj.innerHTML = `<option value="">Todos</option><option value="__events__">Solo eventos sueltos</option>` +
+        proj.innerHTML = `<option value="">Todos</option><option value="__events__">Solo agenda libre</option>` +
           (state.projects || []).filter((p) => !p.archived).map((p) =>
             `<option value="${escapeHtml(p.id)}">${escapeHtml(p.title)}</option>`
           ).join("");
@@ -8187,7 +8224,7 @@
       box.hidden = false;
       box.innerHTML = `<h4>Atrasadas · ${overdue.length}</h4>` + overdue.map((x) => {
         const cd = deadlineLabel(x.date);
-        const who = x.kind === "event" ? "Evento suelto" : (x.p?.title || "");
+        const who = x.kind === "event" ? "Agenda libre" : (x.p?.title || "");
         return `<div class="cal-overdue-item" data-cal-open="${x.id}">
           <span class="when-late">${cd ? cd.text : fmtDay(x.date)}</span>
           ${priorityDot(x.priority, false)}
@@ -8355,7 +8392,7 @@
               <div class="cal-day-row ${x.done ? "done" : ""} tone-p${x.priority}" data-cal-open="${x.id}">
                 <div>
                   <strong>${x.time ? `<span class="cal-time">${escapeHtml(x.time)}</span> ` : ""}${priorityDot(x.priority, x.done)} ${x.done ? "✓ " : ""}${escapeHtml(x.label)}</strong>
-                  <div class="meta">${x.kind === "event" ? "Evento suelto" : "Tarea de proyecto"}${x.t.description ? " · con detalle" : ""}</div>
+                  <div class="meta">${x.kind === "event" ? "Agenda libre" : "Tarea de proyecto"}${x.t.description ? " · con detalle" : ""}</div>
                 </div>
               </div>
             `).join("")}
@@ -8378,7 +8415,7 @@
           <h4>${escapeHtml(label)}${isToday ? " · hoy" : ""}</h4>
           ${items.length ? items.map((x) => {
             const accent = x.kind === "event" ? projectAccent("__events__") : projectAccent(x.p.id);
-            const who = x.kind === "event" ? "Evento suelto" : x.p.title;
+            const who = x.kind === "event" ? "Agenda libre" : x.p.title;
             return `<div class="cal-agenda-row ${x.done ? "done" : ""}" style="--proj-accent:${accent}" data-cal-open="${x.id}">
               ${x.time ? `<span class="cal-time">${escapeHtml(x.time)}</span>` : `<span class="cal-time" style="opacity:.35">—</span>`}
               <div>
@@ -8402,7 +8439,7 @@
       openModal(`
         <h3>${escapeHtml(x.label)}</h3>
         <p style="color:var(--muted);font-size:0.82rem;margin:0 0 0.85rem">
-          ${isEvent ? "Evento suelto" : `Proyecto: <strong>${escapeHtml(item.p.title)}</strong>`}
+          ${isEvent ? "Agenda libre · sin proyecto" : `Proyecto: <strong>${escapeHtml(item.p.title)}</strong>`}
           · ${PRIORITY[item.priority].label}
           · ${CHAMPIONS[item.champion]?.label || "—"}
           ${x.shortCode ? ` · <span class="code-chip">${escapeHtml(x.shortCode)}</span>` : ""}
@@ -8412,12 +8449,22 @@
         <div class="row"><label>Descripción</label><textarea id="mDesc" rows="3">${escapeHtml(x.description || "")}</textarea></div>
         <div class="modal-actions" style="flex-wrap:wrap;gap:0.45rem">
           <button type="button" class="btn btn-ghost" id="mCancel">Cerrar</button>
+          <button type="button" class="btn btn-ghost" id="mToggleDone">${x.done ? "Reabrir" : "Marcar hecha"}</button>
           <button type="button" class="btn btn-ghost" id="mDup">Duplicar a otro día</button>
           ${!isEvent ? `<button type="button" class="btn btn-ghost" id="mGo">Ir al proyecto</button>` : ""}
           <button type="button" class="btn btn-gold" id="mOk">Guardar</button>
         </div>
       `);
       modalBody.querySelector("#mCancel").onclick = closeModal;
+      modalBody.querySelector("#mToggleDone").onclick = () => {
+        x.done = !x.done;
+        x.doneAt = x.done ? todayISO() : null;
+        x.doneBy = x.done ? currentUser.id : null;
+        logActivity(x.done ? "completar" : "reabrir", `${isEvent ? "Agenda libre" : "Tarea"} · «${x.label}» (${x.shortCode || "—"})`);
+        scheduleSave(true);
+        closeModal();
+        renderAll();
+      };
       modalBody.querySelector("#mOk").onclick = () => {
         x.date = modalBody.querySelector("#mDate").value || "";
         x.time = normalizeTime(modalBody.querySelector("#mTime").value || "");
@@ -8485,7 +8532,7 @@
 
     function openCalCreate(prefillDate) {
       const projects = (state.projects || []).filter((p) => !p.archived);
-      const opts = [`<option value="__event__">Evento suelto (sin proyecto)</option>`]
+      const opts = [`<option value="__event__">Agenda libre (sin proyecto)</option>`]
         .concat(projects.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.title)}</option>`))
         .join("");
       openModal(`
@@ -8550,7 +8597,7 @@
         if (where === "__event__") {
           if (!state.calEvents) state.calEvents = [];
           state.calEvents.push(base);
-          logActivity("crear", `Evento suelto «${label}» (${shortCode})`);
+          logActivity("crear", `Agenda libre · «${label}» (${shortCode})`);
         } else {
           const p = state.projects.find((x) => x.id === where);
           if (!p) return toast("Proyecto no encontrado");
