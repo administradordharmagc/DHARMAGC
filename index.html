@@ -5509,6 +5509,7 @@
         tags: Array.isArray(idea.tags) ? idea.tags.map(String) : [],
         pinned: !!idea.pinned,
         archived: !!idea.archived,
+        deleted: !!idea.deleted,
         createdAt: idea.createdAt || Date.now(),
         updatedAt: idea.updatedAt || Date.now()
       }));
@@ -6701,7 +6702,12 @@
         version: data.version || 4,
         updatedAt: data.updatedAt || Date.now(),
         projects: data.projects || [],
-        ideas: data.ideas || [],
+        ideas: (() => {
+          const all = data.ideas || [];
+          const alive = all.filter((i) => !i.deleted);
+          const tombstones = all.filter((i) => i.deleted && (Date.now() - (i.updatedAt || 0)) < 90 * 86400000);
+          return [...alive, ...tombstones];
+        })(),
         goals: data.goals || [],
         calEvents: data.calEvents || [],
         journals: data.journals || {},
@@ -6740,6 +6746,7 @@
     }
 
     function mergeIdea(a, b) {
+      /* Gana la versión más reciente (así un borrado con updatedAt nuevo no reaparece). */
       return ((a.updatedAt || 0) >= (b.updatedAt || 0) ? a : b);
     }
 
@@ -7327,7 +7334,7 @@
       const dueToday = openDated.filter((x) => x.date === today).length;
       const overdueN = openDated.filter((x) => x.date < today).length;
       const goalsOpen = (state.goals || []).filter((g) => !g.done).length;
-      const ideasOpen = (state.ideas || []).filter((i) => !i.archived).length;
+      const ideasOpen = (state.ideas || []).filter((i) => !i.deleted && !i.archived).length;
       const set = (k, v) => {
         const el = document.querySelector(`[data-hub-count="${k}"]`);
         if (el) el.textContent = v;
@@ -9519,7 +9526,7 @@
     function renderIdeas() {
       const list = document.getElementById("ideaList");
       if (!list || !state) return;
-      let ideas = (state.ideas || []).slice();
+      let ideas = (state.ideas || []).filter((i) => !i.deleted);
       if (ideaListFilter === "active") ideas = ideas.filter((i) => !i.archived);
       if (ideaListFilter === "pinned") ideas = ideas.filter((i) => i.pinned && !i.archived);
       if (ideaListFilter === "archived") ideas = ideas.filter((i) => i.archived);
@@ -9564,7 +9571,9 @@
         });
         row.querySelector('[data-idea-act="del"]')?.addEventListener("click", () => {
           if (!confirm("¿Eliminar esta idea?")) return;
-          state.ideas = state.ideas.filter((x) => x.id !== idea.id);
+          /* Borrado suave: se guarda en la nube para que al sincronizar no reaparezca. */
+          idea.deleted = true;
+          idea.updatedAt = Date.now();
           scheduleSave(true); renderIdeas(); paintHubCounts();
         });
       });
@@ -9728,7 +9737,7 @@
       const tags = (document.getElementById("ideaTagsInput")?.value || "")
         .split(",").map((x) => x.trim()).filter(Boolean);
       state.ideas.push({
-        id: uid("idea"), text, tags, pinned: false, archived: false,
+        id: uid("idea"), text, tags, pinned: false, archived: false, deleted: false,
         createdAt: Date.now(), updatedAt: Date.now()
       });
       document.getElementById("ideaTextInput").value = "";
