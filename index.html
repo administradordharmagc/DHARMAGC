@@ -1148,10 +1148,18 @@
       gap: 0.65rem;
       align-items: start;
     }
+    .task-label-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.45rem;
+    }
+    .task-label-row .prio-dot { margin-top: 0.35rem; }
     .task-label {
       font-size: 0.92rem;
       color: var(--text);
       font-weight: 500;
+      flex: 1;
+      min-width: 0;
       letter-spacing: -0.01em;
       word-break: break-word;
     }
@@ -1386,6 +1394,10 @@
     }
 
     .legend-soft {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem 0.9rem;
+      align-items: center;
       font-size: 0.7rem;
       color: var(--muted);
       line-height: 1.45;
@@ -1495,55 +1507,57 @@
       color: var(--muted);
       font-weight: 600;
     }
-    .p-badge {
+    .prio-dot {
+      display: inline-block;
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+      vertical-align: middle;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+    }
+    .prio-dot.p1 { background: #ff3b30; box-shadow: 0 0 0 1px rgba(255,59,48,0.35); }
+    .prio-dot.p2 { background: #ff9500; box-shadow: 0 0 0 1px rgba(255,149,0,0.35); }
+    .prio-dot.p3 { background: #ffcc00; box-shadow: 0 0 0 1px rgba(255,204,0,0.35); }
+    .prio-dot.p4 { background: #34c759; box-shadow: 0 0 0 1px rgba(52,199,89,0.35); }
+    .prio-dot.pdone { background: #8e8e93; opacity: 0.7; }
+    .legend-prio {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      min-width: 1.65rem;
-      height: 1.35rem;
-      padding: 0 0.35rem;
-      border-radius: 2px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      flex-shrink: 0;
-      margin-right: 0.35rem;
-      vertical-align: middle;
-      font-family: var(--font-display);
-      letter-spacing: 0.04em;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 600;
     }
-    .p-badge.p1 { background: rgba(180,70,70,0.18); color: #d08888; box-shadow: 0 0 10px rgba(180,70,70,0.15); }
-    .p-badge.p2 { background: rgba(160,120,150,0.16); color: #c0a0b0; }
-    .p-badge.p3 { background: rgba(100,130,155,0.16); color: #8eacbf; }
-    .p-badge.p4 { background: rgba(120,120,120,0.16); color: #9a9a9a; }
 
     .dd { position: relative; display: inline-block; }
     .dd-btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.4rem;
       min-height: 1.65rem;
-      padding: 0.25rem 0.55rem;
-      border-radius: 2px;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
       border: 1px solid var(--line);
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.35);
       color: var(--text-soft);
-      font-size: 0.7rem;
-      font-weight: 700;
+      font-size: 0.72rem;
+      font-weight: 600;
       cursor: pointer;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.01em;
     }
-    .dd-btn.has { border-color: transparent; }
-    .dd-btn.p1 { background: rgba(180,70,70,0.18); color: #d08888; }
-    .dd-btn.p2 { background: rgba(160,120,150,0.14); color: #c0a0b0; }
-    .dd-btn.p3 { background: rgba(100,130,155,0.14); color: #8eacbf; }
-    .dd-btn.p4 { background: rgba(120,120,120,0.14); color: #9a9a9a; }
+    .dd-btn.has { border-color: var(--line); }
+    .dd-btn.dd-prio.p1 { border-color: rgba(255,59,48,0.55); color: #ffb4ae; background: rgba(255,59,48,0.08); }
+    .dd-btn.dd-prio.p2 { border-color: rgba(255,149,0,0.55); color: #ffd19a; background: rgba(255,149,0,0.08); }
+    .dd-btn.dd-prio.p3 { border-color: rgba(255,204,0,0.55); color: #ffe58a; background: rgba(255,204,0,0.08); }
+    .dd-btn.dd-prio.p4 { border-color: rgba(52,199,89,0.55); color: #a8efb8; background: rgba(52,199,89,0.08); }
     .dd-menu {
       display: none;
       position: absolute;
       top: calc(100% + 4px);
       left: 0;
       z-index: 30;
-      min-width: 200px;
+      min-width: 180px;
       padding: 0.3rem;
       border-radius: var(--radius);
       border: 1px solid var(--line-strong);
@@ -1554,7 +1568,9 @@
     }
     .dd.open .dd-menu { display: block; }
     .dd-menu button {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       width: 100%;
       text-align: left;
       padding: 0.5rem 0.6rem;
@@ -1564,25 +1580,52 @@
     }
     .dd-menu button:hover { background: var(--bg-soft); color: var(--text); }
 
-    .task.tone-p1 { background: rgba(180,70,70,0.08); border-color: rgba(180,70,70,0.22); }
-    .task.tone-p2 { background: rgba(160,120,150,0.07); border-color: rgba(160,120,150,0.18); }
-    .task.tone-p3 { background: rgba(100,130,155,0.08); border-color: rgba(100,130,155,0.2); }
-    .task.tone-p4 { background: rgba(120,120,120,0.08); border-color: rgba(120,120,120,0.18); }
-    .task.tone-done { background: rgba(80,140,100,0.1); border-color: rgba(80,140,100,0.22); }
-    .prio-item.tone-p1 { background: rgba(180,70,70,0.08); border-color: rgba(180,70,70,0.22); }
-    .prio-item.tone-p2 { background: rgba(160,120,150,0.07); border-color: rgba(160,120,150,0.2); }
-    .prio-item.tone-p3 { background: rgba(100,130,155,0.08); border-color: rgba(100,130,155,0.2); }
-    .prio-item.tone-p4 { background: rgba(120,120,120,0.08); border-color: rgba(120,120,120,0.18); }
-    .prio-item.tone-done { background: rgba(80,140,100,0.1); border-color: rgba(80,140,100,0.25); opacity: 0.88; }
+    .task, .prio-item, .cal-day-row, .cal-week-task, .cal-chip {
+      border-style: solid;
+      border-width: 1px;
+    }
+    .task.tone-p1, .prio-item.tone-p1, .cal-day-row.tone-p1, .cal-week-task.tone-p1, .cal-chip.tone-p1 {
+      border-color: rgba(255, 59, 48, 0.85);
+      background: rgba(255, 59, 48, 0.04);
+    }
+    .task.tone-p2, .prio-item.tone-p2, .cal-day-row.tone-p2, .cal-week-task.tone-p2, .cal-chip.tone-p2 {
+      border-color: rgba(255, 149, 0, 0.8);
+      background: rgba(255, 149, 0, 0.04);
+    }
+    .task.tone-p3, .prio-item.tone-p3, .cal-day-row.tone-p3, .cal-week-task.tone-p3, .cal-chip.tone-p3 {
+      border-color: rgba(255, 204, 0, 0.75);
+      background: rgba(255, 204, 0, 0.04);
+    }
+    .task.tone-p4, .prio-item.tone-p4, .cal-day-row.tone-p4, .cal-week-task.tone-p4, .cal-chip.tone-p4 {
+      border-color: rgba(52, 199, 89, 0.75);
+      background: rgba(52, 199, 89, 0.04);
+    }
+    .task.tone-done, .prio-item.tone-done {
+      border-color: rgba(142, 142, 147, 0.45);
+      background: rgba(80,140,100,0.08);
+    }
+    .prio-item.tone-done { opacity: 0.88; }
+    .cal-week-task.tone-p1, .cal-week-task.tone-p2, .cal-week-task.tone-p3, .cal-week-task.tone-p4 {
+      border-left-width: 2px;
+      border-left-style: solid;
+    }
+    .cal-week-task.tone-p1 { border-left-color: #ff3b30; }
+    .cal-week-task.tone-p2 { border-left-color: #ff9500; }
+    .cal-week-task.tone-p3 { border-left-color: #ffcc00; }
+    .cal-week-task.tone-p4 { border-left-color: #34c759; }
 
-    [data-theme="light"] .dd-btn.p1, [data-theme="light"] .p-badge.p1 { background: #f3e4e4; color: #8f4545; }
-    [data-theme="light"] .dd-btn.p2, [data-theme="light"] .p-badge.p2 { background: #f0e8ee; color: #7a556c; }
-    [data-theme="light"] .dd-btn.p3, [data-theme="light"] .p-badge.p3 { background: #e6eef3; color: #4f6a7c; }
-    [data-theme="light"] .dd-btn.p4, [data-theme="light"] .p-badge.p4 { background: #ececec; color: #5c5c5c; }
-    [data-theme="light"] .prio-item.tone-p1, [data-theme="light"] .task.tone-p1 { background: #f7ecec; }
-    [data-theme="light"] .prio-item.tone-p2, [data-theme="light"] .task.tone-p2 { background: #f5eef3; }
-    [data-theme="light"] .prio-item.tone-p3, [data-theme="light"] .task.tone-p3 { background: #eef3f7; }
-    [data-theme="light"] .prio-item.tone-p4, [data-theme="light"] .task.tone-p4 { background: #f0f0f0; }
+    [data-theme="light"] .dd-btn.dd-prio.p1 { color: #c62828; background: rgba(255,59,48,0.08); }
+    [data-theme="light"] .dd-btn.dd-prio.p2 { color: #ef6c00; background: rgba(255,149,0,0.1); }
+    [data-theme="light"] .dd-btn.dd-prio.p3 { color: #9a7b00; background: rgba(255,204,0,0.14); }
+    [data-theme="light"] .dd-btn.dd-prio.p4 { color: #1b7a3a; background: rgba(52,199,89,0.1); }
+    [data-theme="light"] .task.tone-p1, [data-theme="light"] .prio-item.tone-p1,
+    [data-theme="light"] .cal-day-row.tone-p1, [data-theme="light"] .cal-chip.tone-p1 { background: rgba(255,59,48,0.06); }
+    [data-theme="light"] .task.tone-p2, [data-theme="light"] .prio-item.tone-p2,
+    [data-theme="light"] .cal-day-row.tone-p2, [data-theme="light"] .cal-chip.tone-p2 { background: rgba(255,149,0,0.07); }
+    [data-theme="light"] .task.tone-p3, [data-theme="light"] .prio-item.tone-p3,
+    [data-theme="light"] .cal-day-row.tone-p3, [data-theme="light"] .cal-chip.tone-p3 { background: rgba(255,204,0,0.09); }
+    [data-theme="light"] .task.tone-p4, [data-theme="light"] .prio-item.tone-p4,
+    [data-theme="light"] .cal-day-row.tone-p4, [data-theme="light"] .cal-chip.tone-p4 { background: rgba(52,199,89,0.07); }
     [data-theme="light"] .prio-item.tone-done, [data-theme="light"] .task.tone-done { background: #e8f2eb; }
     [data-theme="light"] .dd-menu { background: rgba(250, 246, 244, 0.96); }
 
@@ -1683,13 +1726,15 @@
       font-family: var(--font-display);
     }
     .cal-chip {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 0.28rem;
       font-size: 0.6rem;
       line-height: 1.25;
-      padding: 0.18rem 0.3rem;
-      border-radius: 2px;
-      background: var(--gold-dim);
-      color: var(--gold-bright);
+      padding: 0.2rem 0.35rem;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.03);
+      color: var(--text-soft);
       margin-bottom: 0.18rem;
       white-space: nowrap;
       overflow: hidden;
@@ -1697,6 +1742,7 @@
       font-weight: 500;
       border: 1px solid var(--line);
     }
+    .cal-chip .prio-dot { width: 0.42rem; height: 0.42rem; }
     .cal-chip.done { opacity: 0.45; text-decoration: line-through; }
     .cal-more { font-size: 0.62rem; color: var(--muted); font-weight: 600; }
     .cal-week {
@@ -1725,11 +1771,15 @@
       font-family: var(--font-display);
     }
     .cal-week-task {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0.35rem;
       font-size: 0.74rem;
       padding: 0.4rem 0.45rem;
       border-radius: var(--radius-sm);
       background: rgba(255,255,255,0.03);
-      border-left: 2px solid var(--gold-bright);
+      border: 1px solid var(--line);
       margin-bottom: 0.35rem;
       color: var(--text-soft);
     }
@@ -3591,10 +3641,10 @@
     };
 
     const PRIORITY = {
-      1: { label: "Importante y urgente", hint: "Hacer ya", cls: "p1" },
-      2: { label: "Importante y NO urgente", hint: "Planificar", cls: "p2" },
-      3: { label: "NO importante y urgente", hint: "Delegar o acotar", cls: "p3" },
-      4: { label: "NO importante y NO urgente", hint: "Aparcar o eliminar", cls: "p4" }
+      1: { label: "Urgente", hint: "Atención inmediata", cls: "p1", color: "#ff3b30" },
+      2: { label: "Importante", hint: "Priorizar pronto", cls: "p2", color: "#ff9500" },
+      3: { label: "Normal", hint: "Seguir el ritmo", cls: "p3", color: "#ffcc00" },
+      4: { label: "Baja", hint: "Cuando se pueda", cls: "p4", color: "#34c759" }
     };
 
     const CHAMPIONS = {
@@ -3616,6 +3666,11 @@
     function taskPriority(t) {
       const n = Number(t?.priority);
       return n >= 1 && n <= 4 ? n : 2;
+    }
+
+    function priorityDot(pr, done = false) {
+      const n = done ? "done" : (PRIORITY[pr] ? pr : 2);
+      return `<span class="prio-dot p${n}" title="${escapeHtml(PRIORITY[n]?.label || "")}" aria-label="${escapeHtml(PRIORITY[n]?.label || "Prioridad")}"></span>`;
     }
 
     function taskChampion(t) {
@@ -3750,12 +3805,15 @@
     }
 
     function legendHtml() {
-      return `P1 urgente+importante · P2 planificar · P3 acotar · P4 aparcar`;
+      return `● Urgente · ● Importante · ● Normal · ● Baja`;
     }
 
     function paintLegends() {
       const el = document.getElementById("legendPendientes");
-      if (el) el.textContent = legendHtml();
+      if (!el) return;
+      el.innerHTML = [1,2,3,4].map((n) =>
+        `<span class="legend-prio"><span class="prio-dot p${n}"></span>${PRIORITY[n].label}</span>`
+      ).join("");
     }
 
     function deadlineLabel(iso) {
@@ -3773,14 +3831,19 @@
     function dropdownHtml(kind, value, options, extraBtnClass = "") {
       const current = options.find((o) => String(o.id) === String(value)) || options[0];
       const btnCls = kind === "prio"
-        ? `dd-btn has ${PRIORITY[value]?.cls || "p2"}`
+        ? `dd-btn has dd-prio ${PRIORITY[value]?.cls || "p2"}`
         : `dd-btn has ${extraBtnClass}`.trim();
-      const btnLabel = kind === "prio" ? `P${value}` : (current?.label || "—");
+      const btnInner = kind === "prio"
+        ? `${priorityDot(value)}<span>${escapeHtml(current?.label || "—")}</span>`
+        : escapeHtml(current?.label || "—");
       return `
         <div class="dd" data-dd="${kind}">
-          <button type="button" class="${btnCls}" data-dd-toggle>${kind === "prio" ? btnLabel : escapeHtml(btnLabel)}</button>
+          <button type="button" class="${btnCls}" data-dd-toggle>${btnInner}</button>
           <div class="dd-menu">
-            ${options.map((o) => `<button type="button" data-dd-val="${escapeHtml(String(o.id))}">${kind === "prio" ? "P" + o.id + " · " : ""}${escapeHtml(o.label)}</button>`).join("")}
+            ${options.map((o) => kind === "prio"
+              ? `<button type="button" data-dd-val="${escapeHtml(String(o.id))}" class="dd-prio-opt">${priorityDot(o.id)}<span>${escapeHtml(o.label)}</span></button>`
+              : `<button type="button" data-dd-val="${escapeHtml(String(o.id))}">${escapeHtml(o.label)}</button>`
+            ).join("")}
           </div>
         </div>
       `;
@@ -4849,9 +4912,9 @@
           <div class="kpi-hint">en esta vista</div>
         </div>
         <div class="kpi alert">
-          <div class="kpi-label">P1 abiertas</div>
+          <div class="kpi-label">Urgentes</div>
           <div class="kpi-value">${p1}</div>
-          <div class="kpi-hint">importante y urgente</div>
+          <div class="kpi-hint">prioridad alta</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Hoy / vencidas</div>
@@ -4897,7 +4960,7 @@
             ${dateBlock}
             <div class="prio-body">
               <strong>
-                <span class="p-badge ${PRIORITY[pr].cls}">P${pr}</span>
+                ${priorityDot(pr, isDone)}
                 ${escapeHtml(t.label)}
               </strong>
               <div class="sub">
@@ -5024,7 +5087,7 @@
         const isToday = iso === todayISO();
         const tasks = tasksOnDate(iso);
         const chips = tasks.slice(0, 3).map(({ t }) =>
-          `<span class="cal-chip ${t.done ? "done" : ""}">P${taskPriority(t)} ${escapeHtml(t.label)}</span>`
+          `<span class="cal-chip ${t.done ? "done" : ""} tone-p${taskPriority(t)}">${priorityDot(taskPriority(t), t.done)}${escapeHtml(t.label)}</span>`
         ).join("");
         const more = tasks.length > 3 ? `<div class="cal-more">+${tasks.length - 3}</div>` : "";
         html += `
@@ -5050,9 +5113,9 @@
           <div class="cal-week-col ${isToday ? "today" : ""}" data-jump="${iso}">
             <div class="cal-week-head">${names[i]} ${fmtDay(iso)}</div>
             ${tasks.length ? tasks.map(({ p, t }) => `
-              <div class="cal-week-task ${t.done ? "done" : ""}">
-                <span class="p-badge ${PRIORITY[taskPriority(t)].cls}">P${taskPriority(t)}</span>
-                ${escapeHtml(t.label)}
+              <div class="cal-week-task ${t.done ? "done" : ""} tone-p${taskPriority(t)}">
+                ${priorityDot(taskPriority(t), t.done)}
+                <span>${escapeHtml(t.label)}</span>
                 <span class="proj">${escapeHtml(p.title)}</span>
               </div>
             `).join("") : `<div class="empty" style="font-size:0.75rem">Sin tareas</div>`}
@@ -5069,10 +5132,10 @@
         return `<div class="cal-day-view"><p class="empty">No hay tareas con fecha este día.</p></div>`;
       }
       return `<div class="cal-day-view">${tasks.map(({ p, t }) => `
-        <div class="cal-day-row">
+        <div class="cal-day-row tone-p${taskPriority(t)}">
           <div>
-            <strong><span class="p-badge ${PRIORITY[taskPriority(t)].cls}">P${taskPriority(t)}</span> ${t.done ? "✓ " : ""}${escapeHtml(t.label)}</strong>
-            <div class="meta">${escapeHtml(p.title)} · ${PRIORITY[taskPriority(t)].label}${t.note ? " · tiene nota" : ""}</div>
+            <strong>${priorityDot(taskPriority(t), t.done)} ${t.done ? "✓ " : ""}${escapeHtml(t.label)}</strong>
+            <div class="meta">${escapeHtml(p.title)}${t.note ? " · tiene nota" : ""}</div>
           </div>
         </div>
       `).join("")}</div>`;
@@ -5438,7 +5501,7 @@
         <div class="task-row">
           <input class="check" type="checkbox" ${t.done ? "checked" : ""} />
           <div>
-            <div class="task-label" contenteditable="true">${escapeHtml(t.label)}</div>
+            <div class="task-label-row">${priorityDot(pr, t.done)}<div class="task-label" contenteditable="true">${escapeHtml(t.label)}</div></div>
             <div class="meta-dates">
               <span class="code-chip">${escapeHtml(t.shortCode || "—")}</span>
               · creada ${t.createdAt ? fmtDay(t.createdAt) : "—"}
@@ -5492,7 +5555,7 @@
       bindDropdown(el.querySelector('[data-wrap="prio"]'), (val) => {
         const n = Number(val);
         t.priority = n;
-        logActivity("prioridad", `«${t.label}» (${t.shortCode}) → P${n}`);
+        logActivity("prioridad", `«${t.label}» (${t.shortCode}) → ${PRIORITY[n].label}`);
         scheduleSave(true);
         renderAll();
       });
@@ -5809,7 +5872,7 @@
           doneBy: null
         };
         step.tasks.push(task);
-        logActivity("crear", `Añadió tarea «${label}» (${shortCode}) · P${chosen} · ${CHAMPIONS[champ].label}`);
+        logActivity("crear", `Añadió tarea «${label}» (${shortCode}) · ${PRIORITY[chosen].label} · ${CHAMPIONS[champ].label}`);
         scheduleSave(true);
         closeModal();
         renderAll();
