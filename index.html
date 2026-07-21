@@ -4007,9 +4007,51 @@
     let personFilter = ""; // "" | edgar | carmen
     let sharedQuery = ""; // búsqueda compartida (código + nombre)
 
-    function taskPriority(t) {
+    /** Prioridad base = la que asignáis a mano (se guarda en t.priority). */
+    function basePriority(t) {
       const n = Number(t?.priority);
       return n >= 1 && n <= 4 ? n : 2;
+    }
+
+    /**
+     * Prioridad por calendario (fecha + hora):
+     * - faltan >2 días → baja (4)
+     * - faltan 1–2 días → normal (3)
+     * - el día (antes de la hora) → importante (2)
+     * - el día (hora pasada) o atrasada → urgente (1)
+     * Sin fecha no empuja (4). Completadas no escalan.
+     */
+    function schedulePriority(t) {
+      if (!t || t.done) return 4;
+      if (!t.date) return 4;
+      const today = todayISO();
+      const t0 = new Date(today + "T12:00:00");
+      const t1 = new Date(t.date + "T12:00:00");
+      const days = Math.round((t1 - t0) / 86400000);
+      if (days < 0) return 1;
+      if (days === 0) {
+        const time = normalizeTime(t.time);
+        if (time) {
+          const [h, m] = time.split(":").map(Number);
+          const now = new Date();
+          const dueMins = h * 60 + m;
+          const nowMins = now.getHours() * 60 + now.getMinutes();
+          if (nowMins >= dueMins) return 1;
+        }
+        return 2;
+      }
+      if (days <= 2) return 3;
+      return 4;
+    }
+
+    /** Efectiva = la más urgente entre la base y la de fecha/hora (1 gana a 4). */
+    function effectivePriority(t) {
+      return Math.min(basePriority(t), schedulePriority(t));
+    }
+
+    /** Alias de lectura para UI/orden: siempre la efectiva. */
+    function taskPriority(t) {
+      return effectivePriority(t);
     }
 
     function priorityDot(pr, done = false) {
@@ -4133,6 +4175,7 @@
       s.areas = normalizeAreas(s);
       applyNovaCutPlan(s);
       applyCourtReplayPlan(s);
+      applyCarmen90Plan(s);
       const used = new Set();
       s.projects.forEach((p) => {
         if (typeof p.archived !== "boolean") p.archived = !!p.archived;
@@ -4141,7 +4184,7 @@
         p.badge = projectBadge(p);
         (p.steps || []).forEach((st) => {
           (st.tasks || []).forEach((t) => {
-            t.priority = taskPriority(t);
+            t.priority = basePriority(t);
             t.champion = taskChampion(t);
             if (!t.description) t.description = t.description || "";
             if (typeof t.note !== "string") t.note = t.note || "";
@@ -4193,7 +4236,7 @@
           note: typeof e.note === "string" ? e.note : "",
           date: e.date || "",
           time: normalizeTime(e.time),
-          priority: taskPriority(e),
+          priority: basePriority(e),
           champion: taskChampion(e),
           done: !!e.done,
           doneAt: e.doneAt || null,
@@ -4230,7 +4273,7 @@
       if (!el) return;
       el.innerHTML = [1,2,3,4].map((n) =>
         `<span class="legend-prio"><span class="prio-dot p${n}"></span>${PRIORITY[n].label}</span>`
-      ).join("");
+      ).join("") + `<span class="legend-prio" style="opacity:.85">· auto por fecha/hora</span>`;
     }
 
     function deadlineLabel(iso) {
@@ -4692,6 +4735,121 @@
     }
 
 
+
+    function buildCarmenBrandProject() {
+      const DAYS = [{"day": 1, "date": "2026-07-22", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "El día en que mi cuerpo me obligó a parar", "hablar": "los vértigos, el miedo, la sensación de que tu cuerpo grita, por qué este reto nace de enfermar (no de “quiero ser productiva”), el compromiso de escucharte.", "bucle": "Mi cuerpo tuvo que gritarme para que lo escuchara.", "r2": "Parar no fue flojera. Fue supervivencia.", "r3": "Empezar desde la enfermedad, no desde la motivación.", "r4": "Este cambio nace de un temblor real.", "serie": "Día 1/90 — Hoy empiezo porque ya no podía seguir igual.", "carrusel": "Cama / habitación / luz suave / “DÍA 1”.", "tareas": "Grabar con honestidad cruda · no editar de más · publicar."}, {"day": 2, "date": "2026-07-23", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Tener miedo a mi propio cuerpo", "hablar": "vértigo, inseguridad al moverte, miedo a que vuelva, ansiedad física, sentir que no controlas nada.", "bucle": "Me da miedo mi propio cuerpo.", "r2": "Cuando el cuerpo falla, la mente se asusta.", "r3": "No estoy débil por tener miedo.", "r4": "Hoy aprendo a no pelearme conmigo.", "serie": "Día 2/90 — Día frágil, pero presente.", "carrusel": "Fotos quietas, lentas, sin pose.", "tareas": "Moverte con cuidado · journal de síntomas/emociones · YT."}, {"day": 3, "date": "2026-07-24", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "La culpa de “no estar rindiendo”", "hablar": "sentirte inútil al parar, presión de producir, vergüenza de estar enferma, soltar la productividad tóxica.", "bucle": "Estar enferma no me hace menos valiosa.", "r2": "Mi valor no depende de lo que produzco hoy.", "r3": "Parar también es una decisión valiente.", "r4": "Hoy me permito no “aprovechar” cada minuto.", "serie": "Día 3/90 — Descansar sin culpa.", "carrusel": "Té, manta, ventana, “hoy no fuerzo”.", "tareas": "1 descanso real sin móvil · grabar."}, {"day": 4, "date": "2026-07-25", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Lo que el vértigo me está enseñando", "hablar": "lentitud, humildad, dependencia, pedir ayuda, no dar el cuerpo por sentado.", "bucle": "El vértigo me está enseñando a ir más despacio.", "r2": "La salud no es un fondo infinito.", "r3": "Ignoré señales. Ya no.", "r4": "Escuchar es el primer hábito.", "serie": "Día 4/90 — Una señal que hoy sí escucho.", "carrusel": "Notas / síntomas / aprendizaje (sin dramatizar).", "tareas": "Listar señales que ignorabas · YT."}, {"day": 5, "date": "2026-07-26", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Llorar, frustrarme y seguir aquí", "hablar": "días feos emocionales, llorar sin avergonzarte, no fingir fortaleza falsa.", "bucle": "Puedo estar rota y aun así no abandonarme.", "r2": "La emoción no me descalifica.", "r3": "Llorar también es procesar.", "r4": "Hoy me acompaño, no me exijo.", "serie": "Día 5/90 — Día emocional sin maquillar.", "carrusel": "Selfie real + frase honesta.", "tareas": "Permitirte sentir · grabar corto si estás mal."}, {"day": 6, "date": "2026-07-27", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Pedir ayuda (y lo difícil que me resulta)", "hablar": "orgullo, no querer molestar, Edgard/familia/médicos, vulnerabilidad.", "bucle": "Pedir ayuda también es cuidarme.", "r2": "No tengo que poder con todo sola.", "r3": "La independencia extrema también enferma.", "r4": "Hoy pido una cosa concreta.", "serie": "Día 6/90 — Pedí ayuda.", "carrusel": "Mensaje / café con alguien / apoyo.", "tareas": "Pedir 1 ayuda real · grabar."}, {"day": 7, "date": "2026-07-28", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Semana 1 — estoy viva, y eso ya es mucho", "hablar": "resumen emocional, miedo, cansancio, pequeña esperanza.", "bucle": "Esta semana no fui productiva. Fui valiente.", "r2": "Seguir respirando también cuenta.", "r3": "7 días escuchándome.", "r4": "No necesito un milagro; necesito constancia suave.", "serie": "Día 7/90 — Check emocional semana 1.", "carrusel": "7 momentos frágiles/reales.", "tareas": "Escribir cómo te sientes vs día 1."}, {"day": 8, "date": "2026-07-29", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Ansiedad + cuerpo: cuando la cabeza empeora el síntoma", "hablar": "miedo al mareo, anticipación, círculo ansiedad-vértigo, calmar el sistema nervioso.", "bucle": "A veces el miedo mareaba más que el vértigo.", "r2": "Mi mente también necesita cuidado.", "r3": "Calma no es negación.", "r4": "Hoy bajo una alarma interna.", "serie": "Día 8/90 — Respirar / anclarme.", "carrusel": "Técnicas simples (pies en suelo, agua, aire).", "tareas": "5 min respiración · YT."}, {"day": 9, "date": "2026-07-30", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Enfado conmigo por haber llegado hasta aquí", "hablar": "“¿por qué no paré antes?”, autojuicio, convertir enfado en cuidado.", "bucle": "No me odio por enfermar. Me cuido por haber llegado tarde.", "r2": "El enfado puede volverse protección.", "r3": "No necesito castigarme más.", "r4": "Hoy elijo ternura.", "serie": "Día 9/90 — Perdón suave a mí misma.", "carrusel": "Carta corta a ti misma.", "tareas": "Escribir perdón · grabar."}, {"day": 10, "date": "2026-07-31", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Fe cuando el cuerpo tiembla", "hablar": "orar con miedo, no entender el “porqué”, fe pequeña pero real.", "bucle": "Aunque tiemble, no estoy sola.", "r2": "Fe en la enfermedad no es postureo.", "r3": "Puedo dudar y aún así confiar.", "r4": "Hoy rezo desde lo frágil.", "serie": "Día 10/90 — Oración desde la cama/silla.", "carrusel": "Cuaderno / silencio / luz.", "tareas": "Oración honesta · YT."}, {"day": 11, "date": "2026-08-01", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Identidad: ¿quién soy si no estoy “haciendo”?", "hablar": "dejar de definirte por hacer, existir sin rendimiento, reconstruir identidad.", "bucle": "Si no produzco, ¿quién soy? Estoy aprendiendo a responder.", "r2": "Soy más que mi agenda.", "r3": "Parar me enseña mi valor real.", "r4": "Hoy existo sin demostrarlo.", "serie": "Día 11/90 — Un día sin probar nada.", "carrusel": "Vida quieta.", "tareas": "Media mañana sin tareas de “logro”."}, {"day": 12, "date": "2026-08-02", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Miedo al futuro (“¿y si no se me pasa?”)", "hablar": "incertidumbre médica, catastrofismo, volver al presente.", "bucle": "No sé cómo acaba esto. Sí sé cómo cuido el hoy.", "r2": "El futuro me asusta; el presente me sostiene.", "r3": "Un día a la vez.", "r4": "Hoy no resuelvo mi vida entera.", "serie": "Día 12/90 — Solo hoy.", "carrusel": "Presente (taza, ventana, calle lenta).", "tareas": "Reducir “qué pasaría si…” a papel y soltarlo."}, {"day": 13, "date": "2026-08-03", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "La soledad de estar mal por dentro", "hablar": "verse “bien” por fuera, no entenderte, aislarte, nombrar la soledad.", "bucle": "Hay dolores que no se ven. Y también cuentan.", "r2": "No necesito que se vea para que sea real.", "r3": "Hablar alivia.", "r4": "Hoy salgo un poco del silencio.", "serie": "Día 13/90 — Lo invisible del día.", "carrusel": "“Lo que no se ve” (slides honestos).", "tareas": "Contar 1 verdad a alguien de confianza."}, {"day": 14, "date": "2026-08-04", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Cierre 2 semanas — estoy aprendiendo a escucharme", "hablar": "pequeños cambios, menos pelea interna, aún hay miedo.", "bucle": "Dos semanas escuchando a mi cuerpo. Y duele. Y salva.", "r2": "Empezar a sanar no es lineal.", "r3": "Sigo aquí.", "r4": "La disciplina empieza por no abandonarme.", "serie": "Día 14/90 — Primera semilla de disciplina: no abandonarme.", "carrusel": "Recap emocional 14 días.", "tareas": "Celebrar fragilidad sostenida."}, {"day": 15, "date": "2026-08-05", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Primer movimiento suave (cuerpo con respeto)", "hablar": "paseo corto, estirar, no “entreno hardcore”, volver al cuerpo con cariño.", "bucle": "Hoy no castigo a mi cuerpo. Lo acompaño.", "r2": "Moverme sin violencia.", "r3": "La fuerza también es delicadeza.", "r4": "Un paso cuenta.", "serie": "Día 15/90 — Movimiento suave.", "carrusel": "Zapatillas / calle / sofá post-paseo.", "tareas": "Movimiento mínimo y consciente."}, {"day": 16, "date": "2026-08-06", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Vergüenza de “estar en proceso público”", "hablar": "enseñar enfermedad/fragilidad en redes, miedo al juicio, por qué lo haces igual.", "bucle": "Que me vean frágil también es parte de mi verdad.", "r2": "La marca personal no empieza en el éxito.", "r3": "Empezar desde el suelo es honesto.", "r4": "Hoy publico sin armadura.", "serie": "Día 16/90 — Contenido sin pose.", "carrusel": "BTS grabando desde lo real.", "tareas": "Publicar imperfecto."}, {"day": 17, "date": "2026-08-07", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Lo que ya no estoy dispuesta a ignorar", "hablar": "señales, límites, cansancio, “nunca más a este precio”.", "bucle": "Ya no voy a traicionar a mi cuerpo por parecer fuerte.", "r2": "Límites = supervivencia.", "r3": "Decir no también sana.", "r4": "Hoy elijo una protección.", "serie": "Día 17/90 — Un límite nuevo.", "carrusel": "Lista de “ya no”.", "tareas": "Definir 3 “ya no”."}, {"day": 18, "date": "2026-08-08", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Esperanza pequeña (sin fingir que todo está bien)", "hablar": "un día un poco mejor, no romantizar, esperanza realista.", "bucle": "Hoy hubo un poco de luz. Y me bastó.", "r2": "La esperanza puede ser quieta.", "r3": "No necesito euforia.", "r4": "Sigo.", "serie": "Día 18/90 — Una luz pequeña.", "carrusel": "Detalles bonitos mínimos.", "tareas": "Anotar 3 microesperanzas."}, {"day": 19, "date": "2026-08-09", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Relación conmigo: de crítica a cuidado", "hablar": "voz interna cruel, cambiar el tono, hablarte como a una enferma que quieres.", "bucle": "Me estoy aprendiendo a cuidar en voz baja.", "r2": "La dureza no me sanó.", "r3": "La ternura sí me sostiene.", "r4": "Hoy me hablo mejor.", "serie": "Día 19/90 — Frase nueva para mí.", "carrusel": "Antes/después del diálogo interno.", "tareas": "Pillar 1 autocrítica y reformularla."}, {"day": 20, "date": "2026-08-10", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Gratitud rara: agradecer incluso esto", "hablar": "no agradecer el dolor de forma tóxica, sí agradecer lo que revela.", "bucle": "No agradezco el dolor. Agradezco lo que me obligó a ver.", "r2": "Esta crisis me devolvió a mí.", "r3": "Hay regalos escondidos en lo difícil.", "r4": "Hoy nombro 1 regalo incómodo.", "serie": "Día 20/90 — El regalo incómodo.", "carrusel": "“Lo que esto me está dando”.", "tareas": "Escribir 1 regalo del proceso."}, {"day": 21, "date": "2026-08-11", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "3 semanas — ya no soy solo “la que está mal”", "hablar": "empiezas a sentir identidad más allá del síntoma, aún hay días malos.", "bucle": "Estoy enferma. Pero no soy solo mi enfermedad.", "r2": "Hay más de mí que el vértigo.", "r3": "Empieza a nacer otra versión.", "r4": "Aún emocional. Ya con dirección.", "serie": "Día 21/90 — Más que el síntoma.", "carrusel": "Yo ≠ diagnóstico.", "tareas": "Escribir “quién soy además de esto”."}, {"day": 22, "date": "2026-08-12", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "El duelo de la vida que ya no puedo vivir igual", "hablar": "planes pausados, ritmo viejo muerto, aceptar duelo.", "bucle": "Estoy de duelo por la vida que ya no puedo forzar.", "r2": "Llorar lo perdido abre espacio a lo nuevo.", "r3": "No es debilidad.", "r4": "Hoy hago duelo con dignidad.", "serie": "Día 22/90 — Soltar la vieja velocidad.", "carrusel": "“Lo que dejo atrás”.", "tareas": "Ritual pequeño de cierre."}, {"day": 23, "date": "2026-08-13", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Primera semilla de disciplina (sin volverte loca)", "hablar": "1 hábito mínimo (agua, sueño, oración, paseo), disciplina = amor, no látigo.", "bucle": "Mi primera disciplina es no abandonarme.", "r2": "Pequeño y sagrado.", "r3": "No reinventar mi vida en un día.", "r4": "Un hábito. Solo uno.", "serie": "Día 23/90 — Hábito mínimo cumplido.", "carrusel": "Ese hábito en fotos.", "tareas": "Elegir 1 no negociable suave."}, {"day": 24, "date": "2026-08-14", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Contarle a la cámara lo que no digo en voz alta", "hablar": "secretos emocionales del proceso, alivio de decirlos.", "bucle": "Hay cosas que solo estoy aprendiendo a decir.", "r2": "Nombrar cura un poco.", "r3": "Este canal es mi caja fuerte y mi espejo.", "r4": "Hoy digo una verdad nueva.", "serie": "Día 24/90 — Una verdad dicha.", "carrusel": "Texto + foto íntima (sin exceso).", "tareas": "Una verdad útil, no trauma dump."}, {"day": 25, "date": "2026-08-15", "phase": 1, "phaseTitle": "El cuerpo gritó", "youtube": "Cierre Fase 1 — del colapso a la escucha", "hablar": "qué cambió en 25 días, aún no “emprendedora tip”, sí mujer que se escucha.", "bucle": "Primero me salvé. Luego construiré.", "r2": "Sin salud no hay imperio.", "r3": "Esta base emocional es el cimiento.", "r4": "Ahora empiezo a unir sanación + estructura.", "serie": "Día 25/90 — Fin de la fase solo-emocional.", "carrusel": "Recap emocional fuerte.", "tareas": "Escribir puente a Fase 2. ================================================== FASE 2 — SANAR Y SOSTENERME (días 26–50) Tono: emocional + hábitos + primeros temas de trabajo SUAVES."}, {"day": 26, "date": "2026-08-16", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Construir una rutina que no me rompa", "hablar": "rutina anti-recaída, horarios amables, no imitar hustle.", "bucle": "No quiero una rutina que me vuelva a enfermar.", "r2": "Estructura suave > caos heroico.", "r3": "Mi agenda debe caber en mi cuerpo.", "r4": "Hoy diseño un día humano.", "serie": "Día 26/90 — Rutina amable.", "carrusel": "Día tipo realista.", "tareas": "Diseñar rutina de 5 bloques suaves."}, {"day": 27, "date": "2026-08-17", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Sueño como medicina", "hablar": "dormir mal/mejor, higiene de sueño, culpa de “perder tiempo” dormiendo.", "bucle": "Dormir también es sanar.", "r2": "El descanso es parte del plan.", "r3": "No es holgazanería.", "r4": "Esta noche priorizo sueño.", "serie": "Día 27/90 — Noche de cuidado.", "carrusel": "Rutina de noche.", "tareas": "Acostar temprano."}, {"day": 28, "date": "2026-08-18", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Alimentarme para sostenerme (no para castigarme)", "hablar": "comer con mareos/estrés, nutrición simple, dejar guerra con el cuerpo.", "bucle": "Como para sostenerme, no para pelearme.", "r2": "Comida = apoyo.", "r3": "Sin extremos.", "r4": "Hoy una comida consciente.", "serie": "Día 28/90 — Comida que cuida.", "carrusel": "Platos simples.", "tareas": "1 mejora alimentaria suave."}, {"day": 29, "date": "2026-08-19", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Volver a moverme sin obsesión", "hablar": "paseo/gym suave, escuchar señales, progreso no punitivo.", "bucle": "Me muevo para vivir mejor, no para odiarme menos.", "r2": "Cuerpo aliado.", "r3": "Intensidad según el día.", "r4": "Hoy movimiento posible.", "serie": "Día 29/90 — Movimiento posible.", "carrusel": "Movimiento real del día.", "tareas": "Sesión adaptada a cómo estás."}, {"day": 30, "date": "2026-08-20", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Día 30 — un mes escuchándome", "hablar": "evidencia emocional, menos pelea, primeras estructuras.", "bucle": "30 días después, ya no me abandono tan fácil.", "r2": "El cambio empezó por dentro.", "r3": "Aún hay vértigo/miedo, y también dirección.", "r4": "Siguiente: disciplina con alma.", "serie": "Día 30/90 — Mensaje al día 1 enferma.", "carrusel": "Día 1 vs 30 (emocional).", "tareas": "Carta a tu yo del día 1."}, {"day": 31, "date": "2026-08-21", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Lectura lenta para una mente cansada", "hablar": "leer aunque cueste concentrarte, páginas pocas, calma mental.", "bucle": "Leo poco. Pero vuelvo a mí.", "r2": "Leer también regula.", "r3": "No es rendimiento; es nutrición.", "r4": "Hoy 5–10 páginas.", "serie": "Día 31/90 — Una frase del libro.", "carrusel": "Libro + subrayado.", "tareas": "Leer sin presión."}, {"day": 32, "date": "2026-08-22", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Fe + cuerpo + agenda", "hablar": "orar y organizarte, no espiritualizar la autodestrucción, Dios y límites.", "bucle": "Cuidar mi cuerpo también es una forma de fe.", "r2": "Mi templo primero.", "r3": "Oración + límites prácticos.", "r4": "Hoy uno espiritual + uno práctico.", "serie": "Día 32/90 — Fe práctica.", "carrusel": "Cuaderno + agenda.", "tareas": "Orar · poner 1 límite."}, {"day": 33, "date": "2026-08-23", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Primer acercamiento al trabajo sin reiniciar el colapso", "hablar": "volver a proyectos con miedo, bloques cortos, parar a tiempo.", "bucle": "Puedo trabajar sin volver a romperme.", "r2": "Deep work corto y sagrado.", "r3": "Parar es parte del trabajo.", "r4": "Hoy 45–90 min y cierro.", "serie": "Día 33/90 — Primer bloque de trabajo sano.", "carrusel": "Escritorio + temporizador.", "tareas": "1 bloque y PARAR."}, {"day": 34, "date": "2026-08-24", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Vergüenza de ir “lento” mientras otros corren", "hablar": "compararte en redes, tu ritmo de sanación, fuera carrera.", "bucle": "Mi ritmo no es flojera. Es inteligencia.", "r2": "No corro contra nadie enferma/sanando.", "r3": "Compararme me envenena.", "r4": "Hoy mi ritmo.", "serie": "Día 34/90 — Fuera de la carrera.", "carrusel": "“Mi ritmo” visual.", "tareas": "1h sin comparar."}, {"day": 35, "date": "2026-08-25", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "5 semanas — disciplina = no traicionarme", "hablar": "redefinir disciplina desde el cuidado.", "bucle": "Disciplina, para mí, es no traicionarme.", "r2": "Cumplir lo suave también es carácter.", "r3": "Estoy construyendo confianza conmigo.", "r4": "Sigo.", "serie": "Día 35/90 — Confianza conmigo.", "carrusel": "5 pruebas de que no te abandonaste.", "tareas": "Listar 5 evidencias."}, {"day": 36, "date": "2026-08-26", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Emociones en el trabajo: crear desde lo vivido", "hablar": "tu historia como materia de marca, no explotarte, transformar dolor en mensaje.", "bucle": "No voy a desperdiciar lo que me dolió.", "r2": "Mi historia puede servir.", "r3": "Sin convertir mi trauma en producto vacío.", "r4": "Hoy extraigo 1 aprendizaje útil.", "serie": "Día 36/90 — Dolor → mensaje.", "carrusel": "Aprendizaje en slides.", "tareas": "1 frase útil para alguien más."}, {"day": 37, "date": "2026-08-27", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Límites con gente y con proyectos", "hablar": "decir no, energía limitada, proteger sanación.", "bucle": "Si no me protejo, nadie lo hará por mí.", "r2": "No es egoísmo.", "r3": "Mi capacidad tiene tamaño real.", "r4": "Hoy un no.", "serie": "Día 37/90 — Un no que sana.", "carrusel": "Límites del mes.", "tareas": "Decir 1 no."}, {"day": 38, "date": "2026-08-28", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Días buenos / días malos (no romper la racha emocional)", "hablar": "no linealidad, protocolo para días malos.", "bucle": "Un día malo no borra 37 días de cuidado.", "r2": "Protocolo mínimo: agua, aire, 1 tarea, compasión.", "r3": "Volver.", "r4": "Hoy sostener.", "serie": "Día 38/90 — Protocolo día malo.", "carrusel": "Pasos del protocolo.", "tareas": "Escribir protocolo en el móvil."}, {"day": 39, "date": "2026-08-29", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Primer pensamiento de emprendimiento… sin prisa", "hablar": "ganas de construir, miedo a repetir autoexigencia, emprender desde salud.", "bucle": "Quiero construir. Pero no a costa de mí.", "r2": "El negocio no merece mi colapso.", "r3": "Nueva regla: salud primero.", "r4": "Hoy 1 microavance de proyecto.", "serie": "Día 39/90 — Microavance sano.", "carrusel": "Nota de proyecto.", "tareas": "1 tarea pequeña de negocio."}, {"day": 40, "date": "2026-08-30", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Día 40 — ya no solo sobrevivo: empiezo a sostenerme", "hablar": "puente emocional→construcción.", "bucle": "Pasé de sobrevivir a sostenerme.", "r2": "Aún hay miedo.", "r3": "También hay estructura.", "r4": "Siguiente: trabajar con alma.", "serie": "Día 40/90 — Renovación.", "carrusel": "Motivos profundos (salud + vida nueva).", "tareas": "Releer por qué empezaste."}, {"day": 41, "date": "2026-08-31", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Dinero y miedo (emocional, no técnico)", "hablar": "miedo a no poder, culpa por no producir, seguridad, dignidad.", "bucle": "Hablar de dinero también es hablar de miedo.", "r2": "Merecer sostenerme.", "r3": "Sin números fríos todavía: emoción primero.", "r4": "Hoy 1 acción de orden suave.", "serie": "Día 41/90 — Dinero con honestidad emocional.", "carrusel": "Miedos vs acciones pequeñas.", "tareas": "Anotar miedos de dinero."}, {"day": 42, "date": "2026-09-01", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "6 semanas — mi nueva definición de éxito", "hablar": "éxito = poder vivir en tu cuerpo, paz, constancia, no solo métricas.", "bucle": "Éxito, ahora, es poder habitarme.", "r2": "Redefinir gane.", "r3": "Si mi cuerpo está en guerra, no estoy ganando.", "r4": "Nuevo scorecard personal.", "serie": "Día 42/90 — Nuevo éxito.", "carrusel": "Viejo éxito vs nuevo éxito.", "tareas": "Escribir tu scorecard (sueño, paz, 1 avance…)."}, {"day": 43, "date": "2026-09-02", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Comunidad: no quiero admiración, quiero verdad", "hablar": "conectar con quien también está reconstruyendo.", "bucle": "No busco que me admiren. Busco que se sientan menos solas.", "r2": "Esta marca es refugio y espejo.", "r3": "Responder con presencia.", "r4": "Hoy hablo CON alguien.", "serie": "Día 43/90 — Pregunta a quien te sigue.", "carrusel": "“Si estás pasando por esto…”", "tareas": "Responder 10 mensajes."}, {"day": 44, "date": "2026-09-03", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Perfeccionismo que enferma", "hablar": "pulir de más, no publicar, autoexigencia que te rompió.", "bucle": "El perfeccionismo también me enfermó.", "r2": "Hecho con alma > perfecto vacío.", "r3": "Publicar es cuidarme del bucle mental.", "r4": "Hoy termino imperfecto.", "serie": "Día 44/90 — Imperfecto y publicado.", "carrusel": "“versión suficiente”.", "tareas": "Cerrar 1 cosa pendiente."}, {"day": 45, "date": "2026-09-04", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Mitad del camino — carta a mi yo del día 90", "hablar": "deseo de salud + vida construida, sin perder ternura.", "bucle": "Mitad del camino: sigo eligiendo vivirme.", "r2": "No aflojo el cuidado.", "r3": "Empiezo a construir más visible.", "r4": "45 días de evidencia emocional.", "serie": "Día 45/90 — Carta al día 90.", "carrusel": "Carta en slides.", "tareas": "Escribir carta."}, {"day": 46, "date": "2026-09-05", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Cómo me levanto después de un bajón", "hablar": "recaída emocional/síntoma, sin drama, volver.", "bucle": "Caer ya no significa volver a cero.", "r2": "Tengo protocolo.", "r3": "Me recojo.", "r4": "Continúo.", "serie": "Día 46/90 — Rebound con ternura.", "carrusel": "Pasos.", "tareas": "Usar protocolo si hace falta."}, {"day": 47, "date": "2026-09-06", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Trabajo profundo… y parar a tiempo (regla de oro)", "hablar": "focus + stop loss de energía.", "bucle": "Trabajar mucho ya no es mi medalla.", "r2": "Parar a tiempo es inteligencia.", "r3": "Bloques finitos.", "r4": "Hoy cierro cuando toca.", "serie": "Día 47/90 — Deep work con final.", "carrusel": "Temporizador / “FIN”.", "tareas": "Bloque con alarma de cierre."}, {"day": 48, "date": "2026-09-07", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Silencio para oír qué quiero de verdad", "hablar": "deseos post-enfermedad, vida que quieres, no la que debías.", "bucle": "En el silencio aparece lo que de verdad quiero.", "r2": "No volver a la vida anterior en automático.", "r3": "Elegir.", "r4": "20 min silencio.", "serie": "Día 48/90 — Silencio.", "carrusel": "Fotos quietas.", "tareas": "20 min sin inputs."}, {"day": 49, "date": "2026-09-08", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Sistemas suaves que me sostienen", "hablar": "checklist mínima, plantilla de contenido, hábitos ancla.", "bucle": "Cuando fallan las ganas, me salva el sistema suave.", "r2": "Sistemas anti-colapso.", "r3": "Menos decisión.", "r4": "Hoy mejoro 1 sistema.", "serie": "Día 49/90 — Mi sistema.", "carrusel": "Checklist.", "tareas": "Crear checklist diaria de sanación+creación."}, {"day": 50, "date": "2026-09-09", "phase": 2, "phaseTitle": "Sanar y sostenerme", "youtube": "Día 50 — del colapso a la constructora cuidadosa", "hablar": "ya puedes hablar más de construir, sin olvidar el origen.", "bucle": "Ya no solo me recupero. Empiezo a construir con cuidado.", "r2": "Emprenderé sin repetir el patrón que me rompió.", "r3": "Nueva etapa.", "r4": "Trabajo + alma.", "serie": "Día 50/90 — Nueva etapa.", "carrusel": "“50 días de evidencia”.", "tareas": "Definir 3 reglas de construcción sana. ================================================== FASE 3 — CONSTRUIR SIN REPETIR EL DAÑO (días 51–70) Tono: emprendimiento/disciplina presentes, siempre anclados al cuerpo y a la emoción."}, {"day": 51, "date": "2026-09-10", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Emprender después de enfermar (nuevas reglas)", "hablar": "reglas no negociables de salud en el negocio.", "bucle": "Si el negocio me pide enfermar, el negocio está mal diseñado.", "r2": "Nuevas reglas.", "r3": "Crecer sin autodestrucción.", "r4": "Hoy escribo mis reglas.", "serie": "Día 51/90 — Reglas del negocio sano.", "carrusel": "5 reglas.", "tareas": "Escribir 5 reglas."}, {"day": 52, "date": "2026-09-11", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Ambición con sistema nervioso regulado", "hablar": "querer mucho y estar calmada, ambición ≠ cortisol eterno.", "bucle": "Puedo ser ambiciosa y estar en calma.", "r2": "Ambición regulada.", "r3": "Prisa vs dirección.", "r4": "Hoy 1 acción ambiciosa y calmada.", "serie": "Día 52/90 — Ambición serena.", "carrusel": "Acción del día.", "tareas": "1 avance de proyecto importante."}, {"day": 53, "date": "2026-09-12", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Fe en las decisiones de negocio", "hablar": "elegir proyecto/prioridad, pedir guía, decidir.", "bucle": "Pido guía y después muevo las manos.", "r2": "Fe + ejecución.", "r3": "Decidir sin tortura infinita.", "r4": "Hoy cierro 1 decisión.", "serie": "Día 53/90 — Decisión tomada.", "carrusel": "Decisión + siguiente paso.", "tareas": "Cerrar decisión pendiente."}, {"day": 54, "date": "2026-09-13", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Marca personal: vender sin traicionarme", "hablar": "mostrarte real, no fabricar gurú, coherencia.", "bucle": "Mi marca no puede costarme mi salud.", "r2": "Coherencia > estética.", "r3": "Lo que vendo debo vivirlo.", "r4": "Hoy alineo un post/acción.", "serie": "Día 54/90 — 3 palabras de marca.", "carrusel": "3 palabras.", "tareas": "Definir 3 palabras (ej: real, firme, cuidadosa)."}, {"day": 55, "date": "2026-09-14", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Deep work de verdad en mis proyectos", "hablar": "app/cámaras/otro, avance visible, sin maratón.", "bucle": "Hoy no romantizo el sueño. Lo ejecuto un bloque.", "r2": "Output real.", "r3": "Luego paro.", "r4": "Entregable.", "serie": "Día 55/90 — Entregable.", "carrusel": "Before/after.", "tareas": "1 pieza terminada."}, {"day": 56, "date": "2026-09-15", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "8 semanas — ya no improviso mi cuidado ni mi trabajo", "hablar": "estructura de vida integral.", "bucle": "Dejé de improvisar mi vida.", "r2": "Cuidado + creación.", "r3": "Libertad con forma.", "r4": "Seguir afilando.", "serie": "Día 56/90 — Día estructurado.", "carrusel": "Día ideal realista.", "tareas": "Diseñar semana tipo."}, {"day": 57, "date": "2026-09-16", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Atención, móvil y recaídas de ansiedad", "hablar": "scroll que empeora síntomas, límites digitales.", "bucle": "Mi sistema nervioso no aguanta tanto ruido.", "r2": "Menos feed, más vida.", "r3": "Atención = activo.", "r4": "Hoy límite digital.", "serie": "Día 57/90 — Menos ruido.", "carrusel": "Tiempo de uso / alternativa.", "tareas": "Límite de apps."}, {"day": 58, "date": "2026-09-17", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Pedir apoyo también en lo profesional", "hablar": "no solo en la enfermedad; también en el build (pareja, mentor, comunidad).", "bucle": "Construir acompañada también es inteligencia.", "r2": "Solo se llega más lento y más rota.", "r3": "Pedir feedback/ayuda.", "r4": "Hoy pido 1 apoyo pro.", "serie": "Día 58/90 — Apoyo profesional.", "carrusel": "Conversación / nota.", "tareas": "Pedir 1 feedback."}, {"day": 59, "date": "2026-09-18", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Integridad cuando nadie ve el proceso", "hablar": "hábitos privados, no solo contenido.", "bucle": "Lo que hago sin cámara es mi verdad.", "r2": "Carácter invisible.", "r3": "Cumplir en silencio.", "r4": "Hábito privado.", "serie": "Día 59/90 — Invisible cumplido.", "carrusel": "“lo que no subo”.", "tareas": "Cumplir 1 hábito sin performar."}, {"day": 60, "date": "2026-09-19", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Día 60 — dos tercios: de paciente a constructora", "hablar": "identidad nueva, sin negar que aún sanas.", "bucle": "Ya no solo me curo. También construyo.", "r2": "Las dos cosas juntas.", "r3": "Recta hacia servir a otros.", "r4": "30 días de síntesis.", "serie": "Día 60/90 — Identidad nueva.", "carrusel": "Timeline emocional→construcción.", "tareas": "Metas últimos 30. ================================================== FASE 4 — PARA QUIEN QUIERE CAMBIAR / EMPRENDER / INVERTIR EN SÍ (días 61–90) Tono: útil, claro, transferible… pero nacido de tu historia. Más “esto te sirve a ti”."}, {"day": 61, "date": "2026-09-20", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Si estás agotada/o y aun así quieres construir", "hablar": "guía para empezar desde el límite, no desde el hype.", "bucle": "Si estás roto/a, no empieces con un hustle. Empieza con escucha.", "r2": "Primer paso: cuerpo.", "r3": "Luego 1 hábito.", "r4": "Luego 1 bloque de trabajo.", "serie": "Día 61/90 — Orden correcto: cuerpo → hábito → obra.", "carrusel": "Framework en 3 pasos.", "tareas": "Enseñar tu framework."}, {"day": 62, "date": "2026-09-21", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Cómo definir qué construir (sin volverte loca)", "hablar": "elegir 1 proyecto, criterio, foco.", "bucle": "No necesitas 10 ideas. Necesitas 1 dirección.", "r2": "Foco = respeto a tu energía.", "r3": "Criterios de elección.", "r4": "Nombrar tu apuesta.", "serie": "Día 62/90 — Mi apuesta nombrada.", "carrusel": "Criterios + decisión.", "tareas": "Declarar proyecto #1."}, {"day": 63, "date": "2026-09-22", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Invertir en ti (tiempo, salud, aprendizaje)", "hablar": "inversión no solo dinero; sueño, terapia, libros, equipo.", "bucle": "La mejor inversión fue empezar a tratarme como alguien valiosa.", "r2": "Invertir en salud es rentable.", "r3": "Invertir en oficio.", "r4": "Hoy 1 inversión pequeña.", "serie": "Día 63/90 — Inversión en mí.", "carrusel": "Tipos de inversión personal.", "tareas": "Elegir 1 inversión concreta."}, {"day": 64, "date": "2026-09-23", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Miedo a que funcione (y miedo a que no)", "hablar": "ambos miedos, actuar igual.", "bucle": "Miedo a fallar. Miedo a crecer. Actúo igual.", "r2": "El miedo no se va del todo.", "r3": "Se camina con él.", "r4": "1 acción incómoda.", "serie": "Día 64/90 — Acción con miedo.", "carrusel": "Miedo → acción.", "tareas": "1 acción de expansión."}, {"day": 65, "date": "2026-09-24", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Contenido que sirve (no solo que “engancha”)", "hablar": "utilidad real para tu audiencia.", "bucle": "Si no te sirve para vivir mejor, no sirve.", "r2": "Alma + utilidad.", "r3": "Enseñar lo vivido.", "r4": "Hoy 1 pieza ultra útil.", "serie": "Día 65/90 — Consejo ganado.", "carrusel": "5 consejos reales.", "tareas": "Publicar valor claro."}, {"day": 66, "date": "2026-09-25", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Diseñar una semana que no te enferme", "hablar": "plantilla semanal para makers/emprendedores sensibles/sanando.", "bucle": "Tu semana debe caber en tu sistema nervioso.", "r2": "Bloques, buffers, descanso.", "r3": "Planificar honestidad.", "r4": "Semana diseñada.", "serie": "Día 66/90 — Semana humana.", "carrusel": "Plantilla semanal.", "tareas": "Plan 7 días."}, {"day": 67, "date": "2026-09-26", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Soltar la vida que te estaba matando", "hablar": "duelo productivo, cambios de identidad, para tu audiencia.", "bucle": "A veces salvarte parece un fracaso para el mundo.", "r2": "Y es un éxito íntimo.", "r3": "Soltar.", "r4": "Elegir vida nueva.", "serie": "Día 67/90 — Soltar.", "carrusel": "Antes/después de prioridades.", "tareas": "Soltar 1 cosa vieja."}, {"day": 68, "date": "2026-09-27", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Construir para alguien (no solo para el ego)", "hablar": "servicio, para quién es tu trabajo.", "bucle": "Esto no es solo por mí. También es para quien está donde yo estuve.", "r2": "Propósito multiplica.", "r3": "Cliente/persona ideal emocional.", "r4": "Ayudar a 1.", "serie": "Día 68/90 — Para quién construyo.", "carrusel": "Mensaje a tu gente.", "tareas": "Ayudar 1 persona concreta."}, {"day": 69, "date": "2026-09-28", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Básicos de alto rendimiento humano (no tóxico)", "hablar": "sueño, comida, movimiento, oración/silencio, 1 deep work.", "bucle": "Los básicos bien hechos te cambian más que cualquier truco.", "r2": "Excelencia simple.", "r3": "Repetir.", "r4": "Hoy básicos perfectos.", "serie": "Día 69/90 — Básicos.", "carrusel": "Checklist.", "tareas": "Cumplir básicos."}, {"day": 70, "date": "2026-09-29", "phase": 3, "phaseTitle": "Construir sin repetir el daño", "youtube": "Día 70 — si estás pensando en cambiar tu vida, empieza aquí", "hablar": "síntesis para audiencia, oferta de camino.", "bucle": "Cambiar tu vida no empieza en el business plan. Empieza en escucharte.", "r2": "Luego hábitos.", "r3": "Luego obra.", "r4": "20 días de cierre enseñando.", "serie": "Día 70/90 — Empieza aquí.", "carrusel": "Mapa del cambio.", "tareas": "Publicar mapa 3 fases."}, {"day": 71, "date": "2026-09-30", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Plan post-colapso: cómo no volver atrás", "hablar": "reglas anti-recaída para emprendedores.", "bucle": "El día 90 no sirve si el 91 vuelves a traicionarte.", "r2": "Guardarraíles.", "r3": "Señales de alarma.", "r4": "Plan 91+.", "serie": "Día 71/90 — Anti-recaída.", "carrusel": "Señales + respuestas.", "tareas": "Escribir plan anti-recaída."}, {"day": 72, "date": "2026-10-01", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Subir calidad sin subir sufrimiento", "hablar": "mejorar oficio (contenido/producto) con límites.", "bucle": "Quiero más calidad. No más castigo.", "r2": "Upgrade 10%.", "r3": "Una variable.", "r4": "Mejorar 1 cosa.", "serie": "Día 72/90 — Upgrade.", "carrusel": "Antes/después calidad.", "tareas": "Mejorar 1 variable."}, {"day": 73, "date": "2026-10-02", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Abundancia: compartir el método", "hablar": "enseñar sin miedo a que te copien.", "bucle": "Compartir lo que aprendí no me quita valor.", "r2": "Método > mística.", "r3": "Dar.", "r4": "Recurso gratis.", "serie": "Día 73/90 — Regalo.", "carrusel": "Mini-guía.", "tareas": "Dar algo útil."}, {"day": 74, "date": "2026-10-03", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Cuerpo como activo del negocio", "hablar": "salud = infraestructura de emprender.", "bucle": "Tu cuerpo es el primer activo de tu empresa.", "r2": "Sin él no hay ejecución.", "r3": "Invertir en él.", "r4": "Check físico/energía.", "serie": "Día 74/90 — Activo cuerpo.", "carrusel": "Prácticas de mantenimiento.", "tareas": "Cuidado físico deliberate."}, {"day": 75, "date": "2026-10-04", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Disciplina que no te odia", "hablar": "disciplina compasiva para tu audiencia.", "bucle": "La disciplina que te odia no es disciplina. Es violencia.", "r2": "Cumplir con cariño.", "r3": "Sostenible > heroico.", "r4": "3 actos de cuidado+cumplimiento.", "serie": "Día 75/90 — Disciplina amorosa.", "carrusel": "Ejemplos.", "tareas": "3 actos."}, {"day": 76, "date": "2026-10-05", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Lecciones de emprender desde la reconstrucción", "hablar": "lo que funciona en tu build, errores, siguiente apuesta.", "bucle": "Emprender me está enseñando quién soy… cuando no me fuerzo a ser máquina.", "r2": "Lecciones.", "r3": "Iterar.", "r4": "Siguiente hito.", "serie": "Día 76/90 — Lección #1.", "carrusel": "5 lecciones.", "tareas": "Definir próximo hito."}, {"day": 77, "date": "2026-10-06", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Proteger energía = estrategia", "hablar": "nos, foco, no sobrecompromiso (útil para founders).", "bucle": "Proteger tu energía no es soft. Es estrategia.", "r2": "Foco estrecho.", "r3": "Un no.", "r4": "Capacidad real.", "serie": "Día 77/90 — No estratégico.", "carrusel": "Límites de founder sano.", "tareas": "Cancelar 1 cosa."}, {"day": 78, "date": "2026-10-07", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Leer para decidir mejor", "hablar": "lectura como herramienta de criterio para negocio/vida.", "bucle": "Leo para tener criterio, no para aparentar.", "r2": "Ideas → decisiones.", "r3": "Aplicar.", "r4": "1 idea aplicada.", "serie": "Día 78/90 — Idea aplicada.", "carrusel": "Notas.", "tareas": "Leer + aplicar."}, {"day": 79, "date": "2026-10-08", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Honestidad: qué aún te cuesta (y cómo lo trabajas)", "hablar": "debilidades vigentes, plan (modelo para audiencia).", "bucle": "Seguir en proceso no te hace falsa. Te hace confiable.", "r2": "Nombrar grieta.", "r3": "Microplan.", "r4": "Trabajarla.", "serie": "Día 79/90 — Grieta + plan.", "carrusel": "Debilidad → acción.", "tareas": "Microplan."}, {"day": 80, "date": "2026-10-09", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Últimos 10 días — cómo cerrar un ciclo sin romperte", "hablar": "sprint final humano.", "bucle": "Se puede cerrar fuerte sin cerrar destrozada.", "r2": "Hechos > teatro.", "r3": "Presencia.", "r4": "Ritual de cierre.", "serie": "Día 80/90 — Cierre consciente.", "carrusel": "Countdown útil (checklist).", "tareas": "Checklist final 10 días."}, {"day": 81, "date": "2026-10-10", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Lo que grabar cada día me sanó / me enseñó", "hablar": "voz, verdad, oficio de contar, marca.", "bucle": "La cámara me devolvió la voz.", "r2": "Crear sana cuando no te explota.", "r3": "Documentar transforma.", "r4": "Seguir hablando.", "serie": "Día 81/90 — La cámara y yo.", "carrusel": "Evolución a cámara.", "tareas": "Compilar clips 1 vs ahora."}, {"day": 82, "date": "2026-10-11", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Fe, control y resultados (para quien construye)", "hablar": "hacer tu parte, soltar obsesión de control.", "bucle": "Cumple tu parte. Suelta lo que no controlas.", "r2": "Fidelidad diaria.", "r3": "Paz operativa.", "r4": "Oración + ejecución.", "serie": "Día 82/90 — Fidelidad.", "carrusel": "Frases de fe aplicada.", "tareas": "Ritual fe."}, {"day": 83, "date": "2026-10-12", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Cómo cambian tus relaciones cuando tú cambias", "hablar": "distancias, vínculos nuevos, límites (útil y emocional).", "bucle": "Cuando cambias, tus relaciones se reordenan.", "r2": "No todos vienen.", "r3": "Está bien.", "r4": "Elegir.", "serie": "Día 83/90 — Vínculos.", "carrusel": "Quién suma.", "tareas": "Agradecer a quien acompañó."}, {"day": 84, "date": "2026-10-13", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "El poder de no parar (con inteligencia)", "hablar": "constancia ≠ automutilación; constancia = volver.", "bucle": "No parar — con inteligencia — fue mi estrategia.", "r2": "Volver siempre.", "r3": "Simple repetido.", "r4": "Racha real.", "serie": "Día 84/90 — No paré.", "carrusel": "Rachas.", "tareas": "Contar rachas reales."}, {"day": 85, "date": "2026-10-14", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Cómo medir tu transformación (más allá de likes)", "hablar": "métricas humanas + métricas de obra.", "bucle": "Si solo mides likes, no estás midiendo tu vida.", "r2": "Evidencias.", "r3": "Recap.", "r4": "Preparar cierre.", "serie": "Día 85/90 — Evidencias.", "carrusel": "Lista de evidencias.", "tareas": "Montar recap."}, {"day": 86, "date": "2026-10-15", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Mensaje a quien hoy está en la cama con miedo", "hablar": "carta a tu audiencia enferma/agotada/parada.", "bucle": "Si estás en la cama con miedo: no estás acabada. Estás siendo llamada a escucharte.", "r2": "Empieza pequeño.", "r3": "No te odies.", "r4": "Un día.", "serie": "Día 86/90 — Carta a quien empieza desde el suelo.", "carrusel": "Carta.", "tareas": "Mensaje de servicio puro."}, {"day": 87, "date": "2026-10-16", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Errores que no repetiré (checklist para ti)", "hablar": "5 errores → 5 reglas (muy útil).", "bucle": "Fallé. Aprendí. Convertí el dolor en reglas.", "r2": "Sistema anti-recaída.", "r3": "Reglas claras.", "r4": "Practicarlas.", "serie": "Día 87/90 — Error → regla.", "carrusel": "5×5.", "tareas": "Escribir reglas finales."}, {"day": 88, "date": "2026-10-17", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Vida integrada: salud, fe, obra, dinero", "hablar": "un solo sistema de vida; para quien quiere emprender sin fragmentarse.", "bucle": "Ya no fragmento mi vida. La integro.", "r2": "4 pilares.", "r3": "Coherencia.", "r4": "Revisar pilares.", "serie": "Día 88/90 — Integración.", "carrusel": "4 pilares.", "tareas": "Score de pilares."}, {"day": 89, "date": "2026-10-18", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Víspera — orgullo sereno", "hablar": "cerrar sin ansiedad, gracias, preparación.", "bucle": "Mañana cierro un capítulo que me devolvió a la vida.", "r2": "Orgullo.", "r3": "Gracias.", "r4": "Listo.", "serie": "Día 89/90 — Víspera.", "carrusel": "Making of recap.", "tareas": "Dejar día 90 preparado."}, {"day": 90, "date": "2026-10-19", "phase": 4, "phaseTitle": "Para quien quiere cambiar", "youtube": "Día 90 — de los vértigos a una vida que puedo habitar (y construir)", "hablar": "origen emocional, camino, lo aprendido para quien quiere cambiar/emprender/invertir en sí, invitación al día 91, sin vender hustle.", "bucle": "Empecé porque mi cuerpo gritó. Termino sabiendo escucharlo… y construir en serio.", "r2": "No fue suerte. Fue decisión diaria de no abandonarme.", "r3": "Si estás rota/o, puedes empezar. Si quieres emprender, empieza sana/o.", "r4": "El estándar nuevo comienza mañana.", "serie": "Día 90/90 — Cierre.", "carrusel": "Recap total (emocional → construcción → servicio).", "tareas": "Publicar · celebrar · escribir 91–180 · descansar. ================================================== GUÍA RÁPIDA DIARIA 1) Captura fotos/clips reales del estado del día. 2) Graba YouTube desde el tema (al principio: emoción; luego: emoción+obra; al final: utilidad). 3) Saca 4 frases → 4 Reels prueba. 4) Reel serie “Día X/90”. 5) Carrusel. 6) Orden sugerido: serie → bucle → reflexiones → carrusel. Intro fija recomendada del Reel serie: “Día X de 90 — volví a escucharme, y desde ahí estoy reconstruyendo mi vida.”"}];
+      const TIMES = {
+        bucle: "12:00",
+        r2: "14:30",
+        r3: "16:30",
+        yt: "18:00",
+        r4: "18:30",
+        carrusel: "21:30",
+        serie: "22:00"
+      };
+      const steps = DAYS.map((d) => {
+        const descBase = [
+          d.hablar ? ("Hablar de: " + d.hablar) : "",
+          d.phaseTitle ? ("Fase " + d.phase + " — " + d.phaseTitle) : "",
+          "Formato: YT 18:00 · bucle 12:00 · reflexiones 14:30/16:30/18:30 · carrusel 21:30 · serie 22:00"
+        ].filter(Boolean).join("\n");
+        const tasks = [
+          mkNovaTask("mc90-d" + d.day + "-bucle", "Reel bucle · " + (d.bucle || "bucle del día"), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.bucle,
+            description: (d.bucle || "") + (descBase ? ("\n\n" + descBase) : "")
+          }),
+          mkNovaTask("mc90-d" + d.day + "-r2", "Reel reflexión · " + (d.r2 || "R2"), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.r2,
+            description: d.r2 || ""
+          }),
+          mkNovaTask("mc90-d" + d.day + "-r3", "Reel reflexión · " + (d.r3 || "R3"), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.r3,
+            description: d.r3 || ""
+          }),
+          mkNovaTask("mc90-d" + d.day + "-yt", "YouTube 18:00 · " + (d.youtube || ("Día " + d.day)), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.yt,
+            description: descBase
+          }),
+          mkNovaTask("mc90-d" + d.day + "-r4", "Reel reflexión · " + (d.r4 || "R4"), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.r4,
+            description: d.r4 || ""
+          }),
+          mkNovaTask("mc90-d" + d.day + "-carrusel", "Carrusel 21:30 · " + (d.carrusel || "carrusel"), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.carrusel,
+            description: d.carrusel || ""
+          }),
+          mkNovaTask("mc90-d" + d.day + "-serie", "Reel serie 22:00 · " + (d.serie || ("Día " + d.day + "/90")), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: TIMES.serie,
+            description: (d.serie || "") + "\nIntro fija: «Día " + d.day + " de 90 — volví a escucharme, y desde ahí estoy reconstruyendo mi vida.»"
+          })
+        ];
+        if ((d.tareas || "").trim()) {
+          tasks.push(mkNovaTask("mc90-d" + d.day + "-extra", "Tareas del día · " + String(d.tareas).slice(0, 80), d.date, {
+            priority: 4,
+            champion: "carmen",
+            time: "",
+            description: d.tareas
+          }));
+        }
+        return {
+          id: "step-mc90-" + d.day,
+          title: "Día " + d.day + " · " + (d.youtube || "Plan del día"),
+          tasks
+        };
+      });
+      return {
+        id: "marca-carmen",
+        area: "marcas",
+        owner: "carmen",
+        title: "Carmen · Marca personal 90 días",
+        badge: "En marcha",
+        planVersion: "carmen-90-2026-v1",
+        lede: "Reto 90 días (22 jul–19 oct 2026). Arco: cuerpo → hábitos → construir sin repetir el daño → servir a quien quiere cambiar. Formato diario: 1 YT + 4 reels prueba + 1 serie + 1 carrusel.",
+        note: "Prioridad base baja; sube sola por fecha/hora. Publicación: bucle 12:00 · R2 14:30 · R3 16:30 · YT 18:00 · R4 18:30 · carrusel 21:30 · serie 22:00.",
+        archived: false,
+        steps
+      };
+    }
+
+    function applyCarmen90Plan(s) {
+      const PLAN = "carmen-90-2026-v1";
+      if (!s || !Array.isArray(s.projects)) return s;
+      if (s.carmen90PlanApplied === PLAN) return s;
+      const fresh = buildCarmenBrandProject();
+      const idx = s.projects.findIndex((p) =>
+        p.id === "marca-carmen" ||
+        (/carmen/i.test(p.title || "") && /marca|90/i.test(p.title || ""))
+      );
+      if (idx >= 0) {
+        const prev = s.projects[idx];
+        s.projects[idx] = {
+          ...fresh,
+          owner: prev.owner || fresh.owner,
+          archived: !!prev.archived
+        };
+      } else {
+        s.projects.push(fresh);
+      }
+      s.carmen90PlanApplied = PLAN;
+      s.updatedAt = Date.now();
+      return s;
+    }
+
+
     const DEFAULT_SEED = () => ({
       version: 4,
       updatedAt: Date.now(),
@@ -4790,22 +4948,7 @@
             ]
           }]
         },
-        {
-          id: "marca-carmen",
-          area: "marcas",
-          title: "Carmen",
-          badge: "Por definir",
-          lede: "Marca personal de Carmen.",
-          note: "",
-          steps: [{
-            id: "step-mc-1",
-            title: "Definir",
-            tasks: [
-              { id: "mc-1", label: "Skills + historia", date: "", note: "", done: false, doneAt: null, doneBy: null },
-              { id: "mc-2", label: "1 canal principal", date: "", note: "", done: false, doneAt: null, doneBy: null }
-            ]
-          }]
-        },
+        buildCarmenBrandProject(),
         {
           id: "marca-edgar",
           area: "marcas",
@@ -5584,6 +5727,21 @@
       if (appView === "hub") paintHubCounts();
     }
 
+    /* Re-evaluar prioridades por hora (mismo día) sin recargar a mano */
+    if (!window.__prioTick) {
+      window.__prioTick = setInterval(() => {
+        if (!state || document.hidden) return;
+        const tag = document.activeElement?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+        if (appView === "module" && (currentModule === "calendario" || currentModule === "pendientes" || currentModule === "projects")) {
+          renderPendientes();
+          renderCalendario();
+          if (currentModule === "projects") renderProjects();
+          paintHubCounts();
+        }
+      }, 60000);
+    }
+
     function renderPendientes() {
       const items = allTasks().filter(({ t, p }) => taskVisible(t, p));
       const filtered = items;
@@ -5636,10 +5794,12 @@
       if (!el) return;
 
       function rowHtml({ p, t }, isDone) {
-        const pr = taskPriority(t);
+        const basePr = basePriority(t);
+        const pr = effectivePriority(t);
         const ch = taskChampion(t);
         const isOverdue = !isDone && t.date && t.date < today;
         const isToday = !isDone && t.date === today;
+        const escalated = !isDone && pr < basePr;
         const cd = !isDone && t.date ? deadlineLabel(t.date) : null;
         const hasNote = !!(t.note && t.note.trim());
         const hasDesc = !!(t.description && t.description.trim());
@@ -5662,7 +5822,9 @@
                 <span class="code-chip">${escapeHtml(t.shortCode || "—")}</span>
                 · ${escapeHtml(p.title)}
                 · ${CHAMPIONS[ch].label}
+                ${t.time ? ` · ${escapeHtml(t.time)}` : ""}
                 ${cd ? ` · <span class="countdown ${cd.late ? "late" : ""}">${cd.text}</span>` : ""}
+                ${escalated ? ` · <span class="countdown late">auto → ${PRIORITY[pr].label}</span>` : ""}
               </div>
               <div class="meta-dates">
                 creada ${t.createdAt ? fmtDay(t.createdAt) : "—"}
@@ -6178,7 +6340,7 @@
           note: "",
           date,
           time,
-          priority: taskPriority(src),
+          priority: basePriority(src),
           champion: taskChampion(src),
           createdAt: todayISO(),
           done: false,
@@ -6683,10 +6845,12 @@
         return empty;
       }
       const el = document.createElement("div");
-      const pr = taskPriority(t);
+      const basePr = basePriority(t);
+      const pr = effectivePriority(t);
       const ch = taskChampion(t);
       const hasNote = !!(t.note && t.note.trim());
       const hasDesc = !!(t.description && t.description.trim());
+      const escalated = !t.done && pr < basePr;
       el.className = "task " + (t.done ? "done tone-done" : `tone-p${pr}`);
       el.innerHTML = `
         <div class="task-row">
@@ -6698,6 +6862,7 @@
               · creada ${t.createdAt ? fmtDay(t.createdAt) : "—"}
               ${t.done && t.doneAt ? ` · hecha ${fmtDay(t.doneAt)}` : ""}
               ${t.doneBy ? ` · por ${USERS[t.doneBy]?.short || t.doneBy}` : ""}
+              ${escalated ? ` · <span class="countdown late">auto → ${PRIORITY[pr].label}</span>` : ""}
             </div>
           </div>
           <button type="button" class="icon-btn" data-act="del-task" title="Eliminar">×</button>
@@ -6705,7 +6870,7 @@
         <div class="task-meta">
           <label>Fecha <input type="date" value="${t.date || ""}" /></label>
           <label>Hora <input type="time" value="${t.time || ""}" /></label>
-          <span data-wrap="prio">${priorityButtons(pr)}</span>
+          <span data-wrap="prio">${priorityButtons(basePr)}</span>
           <span data-wrap="champ">${championDropdown(ch)}</span>
           <button type="button" class="mini ${hasDesc ? "has-content" : ""}" data-act="desc">Descripción</button>
           <button type="button" class="mini ${hasNote ? "has-content" : ""}" data-act="note">Nota</button>
