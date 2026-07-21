@@ -6390,7 +6390,8 @@
       const label = document.getElementById("syncLabel");
       if (!label) return;
       label.textContent = "Panel compartido";
-      label.classList.toggle("is-local", text !== "Sincronizado");
+      const ok = /Sincronizado/i.test(text || "");
+      label.classList.toggle("is-local", !ok);
       label.title = text || "Panel compartido";
     }
 
@@ -6720,7 +6721,7 @@
         const surname = (currentUser.name || "").replace(currentUser.short, "").trim();
         role.textContent = surname || "Cuenta activa";
       }
-      setSyncStatus(isCloudId(spaceId) ? "Sincronizado · nube" : "Solo este dispositivo");
+      setSyncStatus(lastCloudOk ? "Sincronizado · nube" : (isCloudId(spaceId) ? "Sincronizando…" : "Solo este dispositivo"));
     }
 
     document.getElementById("btnLogout").addEventListener("click", () => {
