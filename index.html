@@ -1898,6 +1898,204 @@
       background: rgba(255,255,255,0.7);
     }
 
+
+    .side-link.has-overdue .side-link-count {
+      color: #ff6b5a;
+      font-weight: 800;
+      text-shadow: 0 0 12px rgba(255, 59, 48, 0.45);
+    }
+    .cal-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      margin: 0 0 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(0,0,0,0.22);
+    }
+    .cal-filters .lbl {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 0.15rem;
+    }
+    .cal-filters select {
+      background: var(--input-bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.4rem 0.55rem;
+      font-size: 0.78rem;
+      color-scheme: var(--scheme);
+      max-width: 160px;
+    }
+    .cal-person-inline {
+      display: inline-flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+    }
+    .cal-person-inline button {
+      padding: 0.35rem 0.55rem;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      background: transparent;
+    }
+    .cal-person-inline button.active {
+      background: var(--gold-dim);
+      color: var(--gold-bright);
+      border-color: var(--line-strong);
+    }
+    .cal-overdue-box {
+      margin: 0 0 0.85rem;
+      padding: 0.75rem 0.85rem;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 59, 48, 0.4);
+      background: rgba(255, 59, 48, 0.08);
+      box-shadow: 0 0 24px rgba(255, 59, 48, 0.12);
+    }
+    .cal-overdue-box h4 {
+      margin: 0 0 0.55rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #ff6b5a;
+      font-family: var(--font-display);
+    }
+    .cal-overdue-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.45rem;
+      padding: 0.45rem 0.5rem;
+      margin-bottom: 0.35rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 59, 48, 0.25);
+      background: rgba(0,0,0,0.25);
+      cursor: pointer;
+      animation: calOverduePulse 2.4s ease-in-out infinite;
+    }
+    @keyframes calOverduePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.15); }
+      50% { box-shadow: 0 0 16px 2px rgba(255, 59, 48, 0.28); }
+    }
+    .cal-overdue-item .when-late {
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: #ff6b5a;
+      white-space: nowrap;
+    }
+    .cal-time {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      min-width: 2.6rem;
+    }
+    .cal-week-task, .cal-day-row, .cal-agenda-row, .cal-chip {
+      cursor: pointer;
+    }
+    .cal-day-row.done, .cal-week-task.done, .cal-agenda-row.done, .cal-chip.done {
+      opacity: 0.42;
+    }
+    .cal-agenda {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .cal-agenda-day {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.7rem 0.8rem;
+      background: rgba(0,0,0,0.22);
+    }
+    .cal-agenda-day.today {
+      border-color: var(--line-strong);
+      background: var(--gold-dim);
+    }
+    .cal-agenda-day h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.78rem;
+      font-family: var(--font-display);
+      color: var(--text);
+    }
+    .cal-agenda-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      padding: 0.45rem 0.5rem;
+      margin-bottom: 0.3rem;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--proj-accent, var(--line-strong));
+      background: rgba(255,255,255,0.03);
+    }
+    .cal-agenda-row .meta {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+    .cal-add-day {
+      margin-top: 0.35rem;
+      width: 100%;
+      font-size: 0.7rem;
+      padding: 0.35rem;
+      border-radius: 8px;
+      border: 1px dashed var(--line);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .cal-add-day:hover { color: var(--gold-bright); border-color: var(--line-strong); }
+    .cal-week-summary {
+      margin-top: 1rem;
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(0,0,0,0.22);
+    }
+    .cal-week-summary label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+    .cal-week-summary textarea {
+      width: 100%;
+      min-height: 88px;
+      background: var(--input-bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem;
+      color: var(--text);
+      color-scheme: var(--scheme);
+      resize: vertical;
+    }
+    .prio-item.overdue {
+      animation: calOverduePulse 2.8s ease-in-out infinite;
+      border-color: rgba(255, 59, 48, 0.45) !important;
+    }
+    .block-title.overdue-title {
+      color: #ff6b5a;
+      letter-spacing: 0.14em;
+    }
+    [data-theme="light"] .cal-filters,
+    [data-theme="light"] .cal-agenda-day,
+    [data-theme="light"] .cal-week-summary {
+      background: rgba(255,255,255,0.55);
+    }
+    [data-theme="light"] .cal-overdue-box {
+      background: rgba(255, 59, 48, 0.06);
+    }
+
     /* Week / activity */
     .week-controls {
       display: flex;
@@ -3593,8 +3791,29 @@
         <section class="panel" id="panel-calendario">
           <div class="panel-head">
             <div>
-              <p>Tareas con fecha agrupadas por proyecto · día, semana o mes.</p>
+              <p>Día · semana · mes · agenda · con horas, filtros y eventos sueltos.</p>
             </div>
+          </div>
+          <div id="calOverdue" class="cal-overdue-box" hidden></div>
+          <div class="cal-filters" id="calFilters">
+            <span class="lbl">Ver</span>
+            <div class="cal-person-inline" id="calPersonFilter">
+              <button type="button" data-cal-person="" class="active">Los dos</button>
+              <button type="button" data-cal-person="carmen">Carmen</button>
+              <button type="button" data-cal-person="edgar">Edgar</button>
+            </div>
+            <span class="lbl">Proyecto</span>
+            <select id="calProjectFilter" aria-label="Filtrar por proyecto"></select>
+            <span class="lbl">Área</span>
+            <select id="calAreaFilter" aria-label="Filtrar por área"></select>
+            <span class="lbl">Prioridad</span>
+            <select id="calPrioFilter" aria-label="Filtrar por prioridad">
+              <option value="">Todas</option>
+              <option value="1">Urgente</option>
+              <option value="2">Importante</option>
+              <option value="3">Normal</option>
+              <option value="4">Baja</option>
+            </select>
           </div>
           <div class="cal-toolbar">
             <button type="button" class="btn btn-ghost" id="calPrev">‹</button>
@@ -3605,9 +3824,14 @@
               <button type="button" data-mode="day">Día</button>
               <button type="button" data-mode="week">Semana</button>
               <button type="button" data-mode="month" class="active">Mes</button>
+              <button type="button" data-mode="agenda">Agenda</button>
             </div>
           </div>
           <div class="cal-shell" id="calShell"></div>
+          <div class="cal-week-summary">
+            <label for="weekSummaryCal">Resumen de la semana</label>
+            <textarea id="weekSummaryCal" placeholder="¿Qué ha ido bien? ¿Qué bloquea? ¿Prioridad próxima?"></textarea>
+          </div>
         </section>
 
         <section class="panel" id="panel-pendientes">
@@ -3682,8 +3906,8 @@
                 <ul class="week-list" id="weekDue"></ul>
               </div>
               <div class="week-block week-note">
-                <label for="weekSummary">Resumen libre</label>
-                <textarea id="weekSummary" placeholder="¿Qué ha ido bien? ¿Qué bloquea? ¿Prioridad próxima?"></textarea>
+                <label for="weekSummaryStats">Resumen libre (también en Calendario)</label>
+                <textarea id="weekSummaryStats" placeholder="¿Qué ha ido bien? ¿Qué bloquea? ¿Prioridad próxima?"></textarea>
               </div>
             </div>
             <div>
@@ -3905,6 +4129,7 @@
       if (!Array.isArray(s.ideas)) s.ideas = [];
       if (!s.weeks || typeof s.weeks !== "object") s.weeks = {};
       if (!Array.isArray(s.activity)) s.activity = [];
+      if (!Array.isArray(s.calEvents)) s.calEvents = [];
       s.areas = normalizeAreas(s);
       applyNovaCutPlan(s);
       applyCourtReplayPlan(s);
@@ -3921,6 +4146,7 @@
             if (!t.description) t.description = t.description || "";
             if (typeof t.note !== "string") t.note = t.note || "";
             if (!t.createdAt) t.createdAt = t.doneAt || todayISO();
+            t.time = normalizeTime(t.time);
             if (t.shortCode && /^[A-Z0-9]{5}$/i.test(t.shortCode)) {
               used.add(t.shortCode.toUpperCase());
               t.shortCode = t.shortCode.toUpperCase();
@@ -3957,7 +4183,42 @@
         createdAt: idea.createdAt || Date.now(),
         updatedAt: idea.updatedAt || Date.now()
       }));
+      const usedEv = new Set(used);
+      s.calEvents = (s.calEvents || []).map((e) => {
+        const ev = {
+          id: e.id || uid("cev"),
+          shortCode: e.shortCode || "",
+          label: e.label || "",
+          description: e.description || "",
+          note: typeof e.note === "string" ? e.note : "",
+          date: e.date || "",
+          time: normalizeTime(e.time),
+          priority: taskPriority(e),
+          champion: taskChampion(e),
+          done: !!e.done,
+          doneAt: e.doneAt || null,
+          doneBy: e.doneBy || null,
+          createdAt: e.createdAt || todayISO()
+        };
+        if (ev.shortCode && /^[A-Z0-9]{5}$/i.test(ev.shortCode)) {
+          usedEv.add(ev.shortCode.toUpperCase());
+          ev.shortCode = ev.shortCode.toUpperCase();
+        }
+        return ev;
+      });
+      s.calEvents.forEach((ev) => {
+        if (!ev.shortCode || !/^[A-Z0-9]{5}$/.test(ev.shortCode)) ev.shortCode = genShortCode(usedEv);
+      });
       return s;
+    }
+
+    function normalizeTime(v) {
+      if (!v || typeof v !== "string") return "";
+      const m = v.trim().match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return "";
+      const h = Math.min(23, Math.max(0, Number(m[1])));
+      const min = Math.min(59, Math.max(0, Number(m[2])));
+      return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
     }
 
     function legendHtml() {
@@ -4093,6 +4354,7 @@
         id,
         label,
         date: date || "",
+        time: opts.time || "",
         note: "",
         description: opts.description || "",
         priority: opts.priority || 2,
@@ -4571,7 +4833,8 @@
       activity: [],
       weeks: {},
       goals: [],
-      ideas: []
+      ideas: [],
+      calEvents: []
     });
 
     let state = null;
@@ -4582,7 +4845,10 @@
     let pollTimer = null;
     let calCursor = new Date();
     calCursor.setHours(12, 0, 0, 0);
-    let calMode = "month"; // day | week | month
+    let calMode = "month"; // day | week | month | agenda
+    let calProjectFilter = "";
+    let calAreaFilter = "";
+    let calPrioFilter = "";
     const DEFAULT_AREAS = [
       { id: "emprendimientos", label: "Emprendimientos" },
       { id: "tfg", label: "TFG" },
@@ -5211,9 +5477,12 @@
 
     function paintHubCounts() {
       if (!state) return;
+      const today = todayISO();
       const activeProjects = state.projects.filter((p) => !p.archived).length;
       const openTasks = allTasks().filter(({ t }) => !t.done).length;
-      const dated = allTasks().filter(({ t }) => t.date && !t.done).length;
+      const openDated = allCalEntries().filter((x) => x.date && !x.done);
+      const dueToday = openDated.filter((x) => x.date === today).length;
+      const overdueN = openDated.filter((x) => x.date < today).length;
       const goalsOpen = (state.goals || []).filter((g) => !g.done).length;
       const ideasOpen = (state.ideas || []).filter((i) => !i.archived).length;
       const set = (k, v) => {
@@ -5221,11 +5490,13 @@
         if (el) el.textContent = v;
       };
       set("projects", String(activeProjects));
-      set("calendario", String(dated));
-      set("pendientes", String(openTasks));
+      set("calendario", overdueN ? `${dueToday}·${overdueN}↓` : String(dueToday || openDated.length));
+      set("pendientes", overdueN ? `${openTasks}·${overdueN}↓` : String(openTasks));
       set("goals", String(goalsOpen));
       set("ideas", String(ideasOpen));
       set("stats", "·");
+      document.querySelector('.side-link[data-module="calendario"]')?.classList.toggle("has-overdue", overdueN > 0);
+      document.querySelector('.side-link[data-module="pendientes"]')?.classList.toggle("has-overdue", overdueN > 0);
     }
 
     function syncSharedSearchUI() {
@@ -5414,8 +5685,12 @@
         return;
       }
 
+      const overdueList = openSorted.filter(({ t }) => t.date && t.date < today);
+      const restOpen = openSorted.filter(({ t }) => !(t.date && t.date < today));
+
       el.innerHTML = `
-        ${openSorted.length ? `<li class="block-title" style="list-style:none;border:none;background:transparent;display:block;padding:0">Por hacer</li>${openSorted.map((x) => rowHtml(x, false)).join("")}` : ""}
+        ${overdueList.length ? `<li class="block-title overdue-title" style="list-style:none;border:none;background:transparent;display:block;padding:0">Atrasadas · no hechas</li>${overdueList.map((x) => rowHtml(x, false)).join("")}` : ""}
+        ${restOpen.length ? `<li class="block-title" style="list-style:none;border:none;background:transparent;display:block;padding:0">Por hacer</li>${restOpen.map((x) => rowHtml(x, false)).join("")}` : ""}
         ${doneSorted.length ? `<li class="block-title" style="list-style:none;border:none;background:transparent;display:block;padding:0">Completadas</li>${doneSorted.map((x) => rowHtml(x, true)).join("")}` : ""}
       `;
 
@@ -5461,12 +5736,22 @@
       });
     }
 
-    function tasksOnDate(iso) {
-      return allTasks().filter(({ t, p }) => t.date === iso && taskVisible(t, p) && !p.archived);
+    function normalizeTimeValue(v) {
+      return normalizeTime(v);
     }
 
     function projectAccent(id) {
-      const accents = ["#7eb8da", "#c9a87c", "#9bb89a", "#c4a0b8", "#a8b0c0", "#d4b896", "#8eb5a8", "#b9a8d4"];
+      const FIXED = {
+        "emp-app-edicion": "#5eb0ef",
+        "emp-replay": "#e0a45a",
+        "tfg-edgar": "#8fd4a8",
+        "casa-enero": "#d4a0b8",
+        "marca-carmen": "#c9b4f0",
+        "marca-edgar": "#9ab6d9",
+        "__events__": "#f0c070"
+      };
+      if (FIXED[id]) return FIXED[id];
+      const accents = ["#5eb0ef", "#e0a45a", "#8fd4a8", "#d4a0b8", "#c9b4f0", "#9ab6d9", "#f0c070", "#7dcea0"];
       const key = String(id || "");
       let h = 0;
       for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
@@ -5478,29 +5763,207 @@
       return t.length > max ? t.slice(0, max - 1) + "…" : t;
     }
 
-    function groupTasksByProject(items) {
+    function allCalEntries() {
+      const out = [];
+      allTasks().forEach(({ p, s, t }) => {
+        if (p?.archived) return;
+        out.push({
+          kind: "task",
+          id: t.id,
+          p,
+          s,
+          t,
+          date: t.date || "",
+          time: t.time || "",
+          done: !!t.done,
+          label: t.label || "",
+          priority: taskPriority(t),
+          champion: taskChampion(t)
+        });
+      });
+      (state.calEvents || []).forEach((e) => {
+        out.push({
+          kind: "event",
+          id: e.id,
+          p: null,
+          s: null,
+          t: e,
+          date: e.date || "",
+          time: e.time || "",
+          done: !!e.done,
+          label: e.label || "",
+          priority: taskPriority(e),
+          champion: taskChampion(e)
+        });
+      });
+      return out;
+    }
+
+    function findCalEntry(id) {
+      return allCalEntries().find((x) => x.id === id) || null;
+    }
+
+    function calEntryVisible(item) {
+      if (item.kind === "task") {
+        if (!taskVisible(item.t, item.p)) return false;
+        if (calAreaFilter && item.p.area !== calAreaFilter) return false;
+        if (calProjectFilter === "__events__") return false;
+        if (calProjectFilter && item.p.id !== calProjectFilter) return false;
+      } else {
+        if (!matchesPersonFilter(item.t, personFilter)) return false;
+        if (sharedQuery && !matchesSearch(item.t, { title: "Evento suelto" })) return false;
+        if (calAreaFilter) return false;
+        if (calProjectFilter && calProjectFilter !== "__events__") return false;
+      }
+      if (calPrioFilter && String(item.priority) !== String(calPrioFilter)) return false;
+      return true;
+    }
+
+    function tasksOnDate(iso) {
+      return allCalEntries().filter((x) => x.date === iso && calEntryVisible(x));
+    }
+
+    function sortCalEntries(items) {
+      return items.slice().sort((a, b) => {
+        if (a.done !== b.done) return a.done ? 1 : -1;
+        const ta = a.time || "99:99";
+        const tb = b.time || "99:99";
+        if (ta !== tb) return ta.localeCompare(tb);
+        const pd = a.priority - b.priority;
+        if (pd) return pd;
+        return String(a.label).localeCompare(String(b.label), "es");
+      });
+    }
+
+    function groupCalByProject(items) {
       const map = new Map();
       for (const item of items) {
-        const id = item.p?.id || "_";
-        if (!map.has(id)) map.set(id, { p: item.p, items: [] });
-        map.get(id).items.push(item);
+        const key = item.kind === "event" ? "__events__" : (item.p?.id || "_");
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            title: item.kind === "event" ? "Eventos sueltos" : (item.p?.title || "Proyecto"),
+            accent: projectAccent(key),
+            items: []
+          });
+        }
+        map.get(key).items.push(item);
       }
-      const order = (state.projects || []).map((p) => p.id);
+      const order = (state.projects || []).map((p) => p.id).concat(["__events__"]);
       return [...map.values()].sort((a, b) => {
-        const ia = order.indexOf(a.p?.id);
-        const ib = order.indexOf(b.p?.id);
-        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || String(a.p?.title || "").localeCompare(String(b.p?.title || ""), "es");
+        const ia = order.indexOf(a.key);
+        const ib = order.indexOf(b.key);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+      }).map((g) => ({ ...g, items: sortCalEntries(g.items) }));
+    }
+
+    function paintCalFilters() {
+      const proj = document.getElementById("calProjectFilter");
+      const area = document.getElementById("calAreaFilter");
+      if (proj) {
+        const cur = calProjectFilter;
+        proj.innerHTML = `<option value="">Todos</option><option value="__events__">Solo eventos sueltos</option>` +
+          (state.projects || []).filter((p) => !p.archived).map((p) =>
+            `<option value="${escapeHtml(p.id)}">${escapeHtml(p.title)}</option>`
+          ).join("");
+        proj.value = [...proj.options].some((o) => o.value === cur) ? cur : "";
+        calProjectFilter = proj.value;
+      }
+      if (area) {
+        const cur = calAreaFilter;
+        area.innerHTML = `<option value="">Todas</option>` +
+          getAreas().map((a) => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.label)}</option>`).join("");
+        area.value = [...area.options].some((o) => o.value === cur) ? cur : "";
+        calAreaFilter = area.value;
+      }
+      const prio = document.getElementById("calPrioFilter");
+      if (prio) prio.value = calPrioFilter;
+      document.querySelectorAll("#calPersonFilter [data-cal-person]").forEach((b) => {
+        b.classList.toggle("active", (b.dataset.calPerson || "") === personFilter);
       });
+    }
+
+    function renderCalOverdue() {
+      const box = document.getElementById("calOverdue");
+      if (!box) return;
+      const today = todayISO();
+      const overdue = sortCalEntries(allCalEntries().filter((x) => calEntryVisible(x) && !x.done && x.date && x.date < today));
+      if (!overdue.length) {
+        box.hidden = true;
+        box.innerHTML = "";
+        return;
+      }
+      box.hidden = false;
+      box.innerHTML = `<h4>Atrasadas · ${overdue.length}</h4>` + overdue.map((x) => {
+        const cd = deadlineLabel(x.date);
+        const who = x.kind === "event" ? "Evento suelto" : (x.p?.title || "");
+        return `<div class="cal-overdue-item" data-cal-open="${x.id}">
+          <span class="when-late">${cd ? cd.text : fmtDay(x.date)}</span>
+          ${priorityDot(x.priority, false)}
+          <div>
+            <strong style="font-size:0.85rem">${escapeHtml(x.label)}</strong>
+            <div class="meta" style="font-size:0.68rem;color:var(--muted)">${escapeHtml(who)}${x.time ? " · " + x.time : ""}</div>
+          </div>
+        </div>`;
+      }).join("");
+      box.querySelectorAll("[data-cal-open]").forEach((el) => {
+        el.addEventListener("click", () => openCalItem(el.dataset.calOpen));
+      });
+    }
+
+    function syncWeekSummaryIntoCal() {
+      weekMonday = startOfWeek(calCursor);
+      const key = toISO(weekMonday);
+      if (!state.weeks[key]) state.weeks[key] = { summary: "" };
+      const ta = document.getElementById("weekSummaryCal");
+      const tb = document.getElementById("weekSummaryStats");
+      const val = state.weeks[key].summary || "";
+      if (ta && ta.dataset.key !== key) {
+        ta.dataset.key = key;
+        ta.value = val;
+      }
+      if (tb && tb.dataset.key !== key) {
+        tb.dataset.key = key;
+        tb.value = val;
+      }
     }
 
     function monthLabel(date) {
       return date.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
     }
 
+    function bindCalShellClicks(shell) {
+      shell.querySelectorAll("[data-jump]").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          if (e.target.closest("[data-cal-open], [data-cal-add], .cal-proj-group")) return;
+          const [y, m, d] = el.dataset.jump.split("-").map(Number);
+          calCursor = new Date(y, m - 1, d, 12);
+          calMode = "day";
+          document.querySelectorAll("#calModes button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "day"));
+          renderCalendario();
+        });
+      });
+      shell.querySelectorAll("[data-cal-open]").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openCalItem(el.dataset.calOpen);
+        });
+      });
+      shell.querySelectorAll("[data-cal-add]").forEach((el) => {
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openCalCreate(el.dataset.calAdd);
+        });
+      });
+    }
+
     function renderCalendario() {
       const shell = document.getElementById("calShell");
       const title = document.getElementById("calTitle");
       if (!shell || !title) return;
+      paintCalFilters();
+      renderCalOverdue();
+      syncWeekSummaryIntoCal();
 
       if (calMode === "month") {
         title.textContent = monthLabel(calCursor);
@@ -5509,20 +5972,14 @@
         const mon = startOfWeek(calCursor);
         title.textContent = `${fmtDay(toISO(mon))} – ${fmtDay(toISO(addDays(mon, 6)))}`;
         shell.innerHTML = renderWeekView(mon);
+      } else if (calMode === "agenda") {
+        title.textContent = "Agenda · 14 días";
+        shell.innerHTML = renderAgendaView(calCursor);
       } else {
         title.textContent = calCursor.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
         shell.innerHTML = renderDayView(toISO(calCursor));
       }
-
-      shell.querySelectorAll("[data-jump]").forEach((el) => {
-        el.addEventListener("click", () => {
-          const [y, m, d] = el.dataset.jump.split("-").map(Number);
-          calCursor = new Date(y, m - 1, d, 12);
-          calMode = "day";
-          document.querySelectorAll("#calModes button").forEach((b) => b.classList.toggle("active", b.dataset.mode === "day"));
-          renderCalendario();
-        });
-      });
+      bindCalShellClicks(shell);
     }
 
     function renderMonthView(cursor) {
@@ -5537,19 +5994,19 @@
         const iso = toISO(day);
         const inMonth = day.getMonth() === m;
         const isToday = iso === todayISO();
-        const tasks = tasksOnDate(iso);
-        const groups = groupTasksByProject(tasks);
+        const tasks = sortCalEntries(tasksOnDate(iso));
+        const groups = groupCalByProject(tasks);
         let shown = 0;
         const maxChips = 4;
         let body = "";
-        for (const { p, items } of groups) {
+        for (const g of groups) {
           if (shown >= maxChips) break;
           const room = maxChips - shown;
-          const slice = items.slice(0, room);
-          body += `<div class="cal-proj-mini" style="--proj-accent:${projectAccent(p.id)}">
-            <div class="cal-proj-mini-name">${escapeHtml(shortProjectTitle(p.title, 12))}</div>
-            ${slice.map(({ t }) =>
-              `<span class="cal-chip ${t.done ? "done" : ""} tone-p${taskPriority(t)}">${priorityDot(taskPriority(t), t.done)}${escapeHtml(t.label)}</span>`
+          const slice = g.items.slice(0, room);
+          body += `<div class="cal-proj-mini" style="--proj-accent:${g.accent}">
+            <div class="cal-proj-mini-name">${escapeHtml(shortProjectTitle(g.title, 12))}</div>
+            ${slice.map((x) =>
+              `<span class="cal-chip ${x.done ? "done" : ""} tone-p${x.priority}" data-cal-open="${x.id}">${priorityDot(x.priority, x.done)}${escapeHtml(x.label)}</span>`
             ).join("")}
           </div>`;
           shown += slice.length;
@@ -5559,6 +6016,7 @@
           <div class="cal-day ${inMonth ? "" : "out"} ${isToday ? "today" : ""}" data-jump="${iso}">
             <div class="cal-day-num">${day.getDate()}</div>
             ${body}${more}
+            <button type="button" class="cal-add-day" data-cal-add="${iso}">+ Añadir</button>
           </div>
         `;
       }
@@ -5572,23 +6030,24 @@
       for (let i = 0; i < 7; i++) {
         const day = addDays(monday, i);
         const iso = toISO(day);
-        const tasks = tasksOnDate(iso);
-        const groups = groupTasksByProject(tasks);
+        const groups = groupCalByProject(tasksOnDate(iso));
         const isToday = iso === todayISO();
         html += `
           <div class="cal-week-col ${isToday ? "today" : ""}" data-jump="${iso}">
             <div class="cal-week-head">${names[i]} ${fmtDay(iso)}</div>
-            ${groups.length ? groups.map(({ p, items }) => `
-              <div class="cal-proj-group compact" style="--proj-accent:${projectAccent(p.id)}">
-                <div class="cal-proj-head">${escapeHtml(shortProjectTitle(p.title, 18))}<span class="cal-proj-count">${items.length}</span></div>
-                ${items.map(({ t }) => `
-                  <div class="cal-week-task ${t.done ? "done" : ""} tone-p${taskPriority(t)}">
-                    ${priorityDot(taskPriority(t), t.done)}
-                    <span>${escapeHtml(t.label)}</span>
+            ${groups.length ? groups.map((g) => `
+              <div class="cal-proj-group compact" style="--proj-accent:${g.accent}">
+                <div class="cal-proj-head">${escapeHtml(shortProjectTitle(g.title, 18))}<span class="cal-proj-count">${g.items.length}</span></div>
+                ${g.items.map((x) => `
+                  <div class="cal-week-task ${x.done ? "done" : ""} tone-p${x.priority}" data-cal-open="${x.id}">
+                    ${x.time ? `<span class="cal-time">${escapeHtml(x.time)}</span>` : ""}
+                    ${priorityDot(x.priority, x.done)}
+                    <span>${escapeHtml(x.label)}</span>
                   </div>
                 `).join("")}
               </div>
             `).join("") : `<div class="empty" style="font-size:0.75rem">Sin tareas</div>`}
+            <button type="button" class="cal-add-day" data-cal-add="${iso}">+ Añadir</button>
           </div>
         `;
       }
@@ -5597,35 +6056,237 @@
     }
 
     function renderDayView(iso) {
-      const tasks = tasksOnDate(iso);
-      if (!tasks.length) {
-        return `<div class="cal-day-view"><p class="empty">No hay tareas con fecha este día.</p></div>`;
-      }
-      const groups = groupTasksByProject(tasks);
-      return `<div class="cal-day-view">${groups.map(({ p, items }) => `
-        <section class="cal-proj-group" style="--proj-accent:${projectAccent(p.id)}">
-          <h3 class="cal-proj-head">${escapeHtml(p.title)}<span class="cal-proj-count">${items.length} tarea${items.length === 1 ? "" : "s"}</span></h3>
-          ${items.map(({ t }) => `
-            <div class="cal-day-row tone-p${taskPriority(t)}">
-              <div>
-                <strong>${priorityDot(taskPriority(t), t.done)} ${t.done ? "✓ " : ""}${escapeHtml(t.label)}</strong>
-                <div class="meta">${t.description ? "con detalle" : "sin detalle"}${t.note ? " · tiene nota" : ""}</div>
+      const items = sortCalEntries(tasksOnDate(iso));
+      const groups = groupCalByProject(items);
+      let body = "";
+      if (!items.length) {
+        body = `<p class="empty">No hay tareas con fecha este día.</p>`;
+      } else {
+        body = groups.map((g) => `
+          <section class="cal-proj-group" style="--proj-accent:${g.accent}">
+            <h3 class="cal-proj-head">${escapeHtml(g.title)}<span class="cal-proj-count">${g.items.length}</span></h3>
+            ${g.items.map((x) => `
+              <div class="cal-day-row ${x.done ? "done" : ""} tone-p${x.priority}" data-cal-open="${x.id}">
+                <div>
+                  <strong>${x.time ? `<span class="cal-time">${escapeHtml(x.time)}</span> ` : ""}${priorityDot(x.priority, x.done)} ${x.done ? "✓ " : ""}${escapeHtml(x.label)}</strong>
+                  <div class="meta">${x.kind === "event" ? "Evento suelto" : "Tarea de proyecto"}${x.t.description ? " · con detalle" : ""}</div>
+                </div>
               </div>
-            </div>
-          `).join("")}
-        </section>
-      `).join("")}</div>`;
+            `).join("")}
+          </section>
+        `).join("");
+      }
+      return `<div class="cal-day-view">${body}<button type="button" class="cal-add-day" data-cal-add="${iso}">+ Crear en este día</button></div>`;
+    }
+
+    function renderAgendaView(fromDate) {
+      const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 12);
+      let html = `<div class="cal-agenda">`;
+      for (let i = 0; i < 14; i++) {
+        const day = addDays(start, i);
+        const iso = toISO(day);
+        const items = sortCalEntries(tasksOnDate(iso));
+        const isToday = iso === todayISO();
+        const label = day.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" });
+        html += `<div class="cal-agenda-day ${isToday ? "today" : ""}">
+          <h4>${escapeHtml(label)}${isToday ? " · hoy" : ""}</h4>
+          ${items.length ? items.map((x) => {
+            const accent = x.kind === "event" ? projectAccent("__events__") : projectAccent(x.p.id);
+            const who = x.kind === "event" ? "Evento suelto" : x.p.title;
+            return `<div class="cal-agenda-row ${x.done ? "done" : ""}" style="--proj-accent:${accent}" data-cal-open="${x.id}">
+              ${x.time ? `<span class="cal-time">${escapeHtml(x.time)}</span>` : `<span class="cal-time" style="opacity:.35">—</span>`}
+              <div>
+                <strong>${priorityDot(x.priority, x.done)} ${escapeHtml(x.label)}</strong>
+                <div class="meta">${escapeHtml(who)}</div>
+              </div>
+            </div>`;
+          }).join("") : `<div class="empty" style="font-size:0.75rem">Libre</div>`}
+          <button type="button" class="cal-add-day" data-cal-add="${iso}">+ Añadir</button>
+        </div>`;
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    function openCalItem(id) {
+      const item = findCalEntry(id);
+      if (!item) return;
+      const x = item.t;
+      const isEvent = item.kind === "event";
+      openModal(`
+        <h3>${escapeHtml(x.label)}</h3>
+        <p style="color:var(--muted);font-size:0.82rem;margin:0 0 0.85rem">
+          ${isEvent ? "Evento suelto" : `Proyecto: <strong>${escapeHtml(item.p.title)}</strong>`}
+          · ${PRIORITY[item.priority].label}
+          · ${CHAMPIONS[item.champion]?.label || "—"}
+          ${x.shortCode ? ` · <span class="code-chip">${escapeHtml(x.shortCode)}</span>` : ""}
+        </p>
+        <div class="row"><label>Fecha</label><input type="date" id="mDate" value="${x.date || ""}" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="row"><label>Hora (opcional)</label><input type="time" id="mTime" value="${x.time || ""}" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="row"><label>Descripción</label><textarea id="mDesc" rows="3">${escapeHtml(x.description || "")}</textarea></div>
+        <div class="modal-actions" style="flex-wrap:wrap;gap:0.45rem">
+          <button type="button" class="btn btn-ghost" id="mCancel">Cerrar</button>
+          <button type="button" class="btn btn-ghost" id="mDup">Duplicar a otro día</button>
+          ${!isEvent ? `<button type="button" class="btn btn-ghost" id="mGo">Ir al proyecto</button>` : ""}
+          <button type="button" class="btn btn-gold" id="mOk">Guardar</button>
+        </div>
+      `);
+      modalBody.querySelector("#mCancel").onclick = closeModal;
+      modalBody.querySelector("#mOk").onclick = () => {
+        x.date = modalBody.querySelector("#mDate").value || "";
+        x.time = normalizeTime(modalBody.querySelector("#mTime").value || "");
+        x.description = modalBody.querySelector("#mDesc").value || "";
+        logActivity("editar", `Calendario · «${x.label}»`);
+        scheduleSave(true);
+        closeModal();
+        renderAll();
+      };
+      modalBody.querySelector("#mDup").onclick = () => {
+        closeModal();
+        openDuplicateCalItem(item);
+      };
+      modalBody.querySelector("#mGo")?.addEventListener("click", () => {
+        closeModal();
+        openModule("projects");
+        openProjectDetail(item.p.id);
+      });
+    }
+
+    function openDuplicateCalItem(item) {
+      const src = item.t;
+      openModal(`
+        <h3>Duplicar «${escapeHtml(src.label)}»</h3>
+        <div class="row"><label>Nueva fecha</label><input type="date" id="mDate" value="${src.date || todayISO()}" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="row"><label>Hora (opcional)</label><input type="time" id="mTime" value="${src.time || ""}" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="mCancel">Cancelar</button>
+          <button type="button" class="btn btn-gold" id="mOk">Duplicar</button>
+        </div>
+      `);
+      modalBody.querySelector("#mCancel").onclick = closeModal;
+      modalBody.querySelector("#mOk").onclick = () => {
+        const date = modalBody.querySelector("#mDate").value || "";
+        const time = normalizeTime(modalBody.querySelector("#mTime").value || "");
+        const used = new Set();
+        allTasks().forEach(({ t }) => { if (t.shortCode) used.add(t.shortCode); });
+        (state.calEvents || []).forEach((e) => { if (e.shortCode) used.add(e.shortCode); });
+        const clone = {
+          id: uid(item.kind === "event" ? "cev" : "task"),
+          shortCode: genShortCode(used),
+          label: src.label,
+          description: src.description || "",
+          note: "",
+          date,
+          time,
+          priority: taskPriority(src),
+          champion: taskChampion(src),
+          createdAt: todayISO(),
+          done: false,
+          doneAt: null,
+          doneBy: null
+        };
+        if (item.kind === "event") {
+          state.calEvents.push(clone);
+        } else {
+          item.s.tasks.push(clone);
+        }
+        logActivity("crear", `Duplicó «${clone.label}» (${clone.shortCode}) → ${date || "sin fecha"}`);
+        scheduleSave(true);
+        closeModal();
+        renderAll();
+      };
+    }
+
+    function openCalCreate(prefillDate) {
+      const projects = (state.projects || []).filter((p) => !p.archived);
+      const opts = [`<option value="__event__">Evento suelto (sin proyecto)</option>`]
+        .concat(projects.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.title)}</option>`))
+        .join("");
+      openModal(`
+        <h3>Nuevo en el calendario</h3>
+        <div class="row"><label>Dónde</label><select id="mWhere" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color:var(--text);color-scheme:var(--scheme)">${opts}</select></div>
+        <div class="row"><label>Qué</label><input type="text" id="mTitle" placeholder="Título" /></div>
+        <div class="row"><label>Descripción (opcional)</label><textarea id="mDesc" placeholder="Detalle…"></textarea></div>
+        <div class="row"><label>Fecha</label><input type="date" id="mDate" value="${prefillDate || todayISO()}" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="row"><label>Hora (opcional)</label><input type="time" id="mTime" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="row"><label>Prioridad</label><div id="mPrio">${priorityButtons(2)}</div></div>
+        <div class="row"><label>Champion</label><div id="mChamp">${championDropdown("both")}</div></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="mCancel">Cancelar</button>
+          <button type="button" class="btn btn-gold" id="mOk">Crear</button>
+        </div>
+      `);
+      let chosen = 2;
+      let champ = "both";
+      function rebindPrio() {
+        bindDropdown(modalBody.querySelector("#mPrio"), (val) => {
+          chosen = Number(val);
+          modalBody.querySelector("#mPrio").innerHTML = priorityButtons(chosen);
+          rebindPrio();
+        });
+      }
+      function rebindChamp() {
+        bindDropdown(modalBody.querySelector("#mChamp"), (val) => {
+          champ = val;
+          modalBody.querySelector("#mChamp").innerHTML = championDropdown(champ);
+          rebindChamp();
+        });
+      }
+      rebindPrio();
+      rebindChamp();
+      modalBody.querySelector("#mCancel").onclick = closeModal;
+      modalBody.querySelector("#mOk").onclick = () => {
+        const label = modalBody.querySelector("#mTitle").value.trim();
+        if (!label) return toast("Escribe un título");
+        const where = modalBody.querySelector("#mWhere").value;
+        const date = modalBody.querySelector("#mDate").value || "";
+        const time = normalizeTime(modalBody.querySelector("#mTime").value || "");
+        const description = modalBody.querySelector("#mDesc").value || "";
+        const used = new Set();
+        allTasks().forEach(({ t }) => { if (t.shortCode) used.add(t.shortCode); });
+        (state.calEvents || []).forEach((e) => { if (e.shortCode) used.add(e.shortCode); });
+        const shortCode = genShortCode(used);
+        const base = {
+          id: uid(where === "__event__" ? "cev" : "task"),
+          shortCode,
+          label,
+          description,
+          note: "",
+          date,
+          time,
+          priority: chosen,
+          champion: champ,
+          createdAt: todayISO(),
+          done: false,
+          doneAt: null,
+          doneBy: null
+        };
+        if (where === "__event__") {
+          if (!state.calEvents) state.calEvents = [];
+          state.calEvents.push(base);
+          logActivity("crear", `Evento suelto «${label}» (${shortCode})`);
+        } else {
+          const p = state.projects.find((x) => x.id === where);
+          if (!p) return toast("Proyecto no encontrado");
+          if (!p.steps.length) p.steps.push({ id: uid("step"), title: "General", tasks: [] });
+          p.steps[p.steps.length - 1].tasks.push(base);
+          logActivity("crear", `Tarea «${label}» (${shortCode}) en ${p.title}`);
+        }
+        scheduleSave(true);
+        closeModal();
+        renderAll();
+      };
     }
 
     document.getElementById("calPrev").addEventListener("click", () => {
       if (calMode === "month") calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1, 12);
-      else if (calMode === "week") calCursor = addDays(calCursor, -7);
+      else if (calMode === "week" || calMode === "agenda") calCursor = addDays(calCursor, -7);
       else calCursor = addDays(calCursor, -1);
       renderCalendario();
     });
     document.getElementById("calNext").addEventListener("click", () => {
       if (calMode === "month") calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1, 12);
-      else if (calMode === "week") calCursor = addDays(calCursor, 7);
+      else if (calMode === "week" || calMode === "agenda") calCursor = addDays(calCursor, 7);
       else calCursor = addDays(calCursor, 1);
       renderCalendario();
     });
@@ -5641,6 +6302,49 @@
       document.querySelectorAll("#calModes button").forEach((b) => b.classList.toggle("active", b === btn));
       renderCalendario();
     });
+
+    document.getElementById("calProjectFilter")?.addEventListener("change", (e) => {
+      calProjectFilter = e.target.value || "";
+      renderCalendario();
+    });
+    document.getElementById("calAreaFilter")?.addEventListener("change", (e) => {
+      calAreaFilter = e.target.value || "";
+      renderCalendario();
+    });
+    document.getElementById("calPrioFilter")?.addEventListener("change", (e) => {
+      calPrioFilter = e.target.value || "";
+      renderCalendario();
+    });
+    document.getElementById("calPersonFilter")?.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-cal-person]");
+      if (!btn) return;
+      personFilter = btn.dataset.calPerson || "";
+      updatePersonFilterUI();
+      renderAll();
+    });
+
+    function bindWeekSummaryField(id) {
+      const el = document.getElementById(id);
+      if (!el || el.dataset.bound) return;
+      el.dataset.bound = "1";
+      el.addEventListener("change", (e) => {
+        const key = toISO(weekMonday);
+        state.weeks[key] = {
+          summary: e.target.value,
+          updatedBy: currentUser.id,
+          updatedAt: Date.now()
+        };
+        const other = id === "weekSummaryCal" ? document.getElementById("weekSummaryStats") : document.getElementById("weekSummaryCal");
+        if (other) {
+          other.dataset.key = key;
+          other.value = e.target.value;
+        }
+        logActivity("resumen", "Actualizó el resumen semanal");
+        scheduleSave(true);
+      });
+    }
+    bindWeekSummaryField("weekSummaryCal");
+    bindWeekSummaryField("weekSummaryStats");
 
     function paintAreaChips() {
       const root = document.getElementById("areaChips");
@@ -6000,10 +6704,12 @@
         </div>
         <div class="task-meta">
           <label>Fecha <input type="date" value="${t.date || ""}" /></label>
+          <label>Hora <input type="time" value="${t.time || ""}" /></label>
           <span data-wrap="prio">${priorityButtons(pr)}</span>
           <span data-wrap="champ">${championDropdown(ch)}</span>
           <button type="button" class="mini ${hasDesc ? "has-content" : ""}" data-act="desc">Descripción</button>
           <button type="button" class="mini ${hasNote ? "has-content" : ""}" data-act="note">Nota</button>
+          <button type="button" class="mini" data-act="dup">Duplicar</button>
         </div>
         <div class="task-note" data-pane="desc">
           <textarea data-field="description" placeholder="Contexto estable de la tarea…">${escapeHtml(t.description || "")}</textarea>
@@ -6037,6 +6743,17 @@
         logActivity("fecha", `Fecha en «${t.label}» (${t.shortCode}): ${t.date ? fmtDay(t.date) : "sin fecha"}`);
         scheduleSave(true);
         renderAll();
+      });
+
+      el.querySelector('input[type="time"]')?.addEventListener("change", (e) => {
+        t.time = normalizeTime(e.target.value || "");
+        logActivity("fecha", `Hora en «${t.label}» (${t.shortCode}): ${t.time || "sin hora"}`);
+        scheduleSave(true);
+        renderAll();
+      });
+
+      el.querySelector('[data-act="dup"]')?.addEventListener("click", () => {
+        openDuplicateCalItem({ kind: "task", t, p, s: step, id: t.id, date: t.date, time: t.time || "", done: t.done, label: t.label, priority: pr, champion: ch });
       });
 
       bindDropdown(el.querySelector('[data-wrap="prio"]'), (val) => {
@@ -6125,11 +6842,15 @@
 
       const key = toISO(mon);
       if (!state.weeks[key]) state.weeks[key] = { summary: "" };
-      const ta = document.getElementById("weekSummary");
-      if (ta.dataset.key !== key) {
-        ta.dataset.key = key;
-        ta.value = state.weeks[key].summary || "";
-      }
+      const val = state.weeks[key].summary || "";
+      ["weekSummaryCal", "weekSummaryStats"].forEach((id) => {
+        const ta = document.getElementById(id);
+        if (!ta) return;
+        if (ta.dataset.key !== key) {
+          ta.dataset.key = key;
+          ta.value = val;
+        }
+      });
     }
 
     function fillWeekList(id, arr, empty) {
@@ -6153,16 +6874,6 @@
     document.getElementById("prevWeek").onclick = () => { weekMonday = addDays(weekMonday, -7); renderWeek(); };
     document.getElementById("nextWeek").onclick = () => { weekMonday = addDays(weekMonday, 7); renderWeek(); };
     document.getElementById("thisWeek").onclick = () => { weekMonday = startOfWeek(new Date()); renderWeek(); };
-    document.getElementById("weekSummary").addEventListener("change", (e) => {
-      const key = toISO(weekMonday);
-      state.weeks[key] = {
-        summary: e.target.value,
-        updatedBy: currentUser.id,
-        updatedAt: Date.now()
-      };
-      logActivity("resumen", "Actualizó el resumen semanal");
-      scheduleSave(true);
-    });
 
     function renderActivity() {
       const el = document.getElementById("activityList");
@@ -6315,6 +7026,7 @@
         <div class="row"><label>Qué hay que hacer</label><input type="text" id="mTitle" placeholder="Título de la tarea" /></div>
         <div class="row"><label>Descripción (opcional)</label><textarea id="mDesc" placeholder="Contexto estable…"></textarea></div>
         <div class="row"><label>Fecha / deadline (opcional)</label><input type="date" id="mDate" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
+        <div class="row"><label>Hora (opcional)</label><input type="time" id="mTime" style="width:100%;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:0.7rem;color-scheme:var(--scheme)" /></div>
         <div class="row">
           <label>Prioridad</label>
           <div id="mPrio">${priorityButtons(2)}</div>
@@ -6360,6 +7072,7 @@
           label,
           description: modalBody.querySelector("#mDesc").value || "",
           date: modalBody.querySelector("#mDate").value || "",
+          time: normalizeTime(modalBody.querySelector("#mTime")?.value || ""),
           note: "",
           priority: chosen,
           champion: champ,
@@ -6390,7 +7103,10 @@
         }
         return openAddProject(defaultAreaId());
       }
-      if (currentModule === "pendientes" || currentModule === "calendario") {
+      if (currentModule === "calendario") {
+        return openCalCreate(toISO(calCursor));
+      }
+      if (currentModule === "pendientes") {
         const first = state.projects.find((p) => !p.archived);
         if (!first) return toast("Crea un proyecto primero");
         if (!first.steps.length) return openAddStep(first.id);
